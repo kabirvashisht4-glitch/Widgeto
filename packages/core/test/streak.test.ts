@@ -125,3 +125,22 @@ test('intensity scales to the user, not to an absolute number', () => {
   assert.equal(casual[2], 4, "a casual user's best day is still a full-intensity square");
   assert.deepEqual(casual, heavy, 'the same shape of effort reads the same at any scale');
 });
+
+test('heatmap attribution records which platform each day came from', async () => {
+  const { attributeHeatmap } = await import('../src/streak.ts');
+  const grid = attributeHeatmap(
+    [
+      { platform: 'github', ok: true, days: [{ date: TODAY, count: 4 }] },
+      { platform: 'leetcode', ok: true, days: [{ date: TODAY, count: 2 }] },
+      { platform: 'codeforces', ok: false, days: [{ date: TODAY, count: 99 }] },
+    ],
+    3,
+    TZ,
+    NOW,
+  );
+  const today = grid[2];
+  assert.equal(today.date, TODAY);
+  assert.equal(today.count, 6, 'only successful platforms contribute');
+  assert.deepEqual(today.byPlatform, { github: 4, leetcode: 2 });
+  assert.deepEqual(grid[0].byPlatform, {}, 'quiet days carry an empty attribution');
+});
