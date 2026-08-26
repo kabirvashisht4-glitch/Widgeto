@@ -1,0 +1,104 @@
+/**
+ * GET /api/streak?github=…&codeforces=…&leetcode=…&tz=Asia/Kolkata
+ *
+ * The single endpoint the site and the phone widget both call. It exists so
+ * that the GitHub token stays on the server and so that upstream APIs see one
+ * polite caller instead of one per widget refresh.
+ */
+import { NextRequest, NextResponse } from 'next/server';
+import { aggregate, attributeHeatmap, PLATFORM_IDS, safeTimezone } from '@widgeto/core';
+import type { HandleMap, PlatformId, UnifiedActivity } from '@widgeto/core';
+
+export const runtime = 'nodejs';
+// Never statically rendered — the answer depends entirely on query params.
+export const dynamic = 'force-dynamic';
+
+/**
+ * Two of the three upstreams are rate-limited and one is a guest endpoint we
+ * must not hammer, so identical requests inside the TTL are served from memory.
+ * A real deployment swaps this for Redis or Workers KV; the interface is the
+ * same and the reasoning does not change.
+ */
+const TTL_MS = 10 * 60 * 1000;
+const MAX_ENTRIES = 500;
+const cache = new Map<string, { at: number; body: unknown }>();
+
+function readCache(key: string) {
+  const hit = cache.get(key);
+  if (!hit) return null;
+  if (Date.now() - hit.at > TTL_MS) {
+    cache.delete(key);
+    return null;
+  }
+  // Refresh insertion order so the map behaves as an LRU.
+  cache.delete(key);
+  cache.set(key, hit);
+  return hit.body;
+}
+
+function writeCache(key: string, body: unknown) {
+  cache.set(key, { at: Date.now(), body });
+  while (cache.size > MAX_ENTRIES) cache.delete(cache.keys().next().value as string);
+}
+
+/** Handles are user input heading for a URL — keep them to plausible shapes. */
+const HANDLE_RE = /^[A-Za-z0-9_.-]{1,39}$/;
+
+export async function GET(req: NextRequest) {
+  const params = req.nextUrl.searchParams;
+  const timezone = safeTimezone(params.get('tz') ?? undefined);
+  const days = Math.min(Math.max(Number(params.get('days') ?? 365), 7), 365);
+
+  const handles: HandleMap = {};
+  for (const id of PLATFORM_IDS) {
+    const raw = params.get(id)?.trim();
+    if (!raw) continue;
+    if (!HANDLE_RE.test(raw)) {
+      return NextResponse.json(
+        { error: `"${raw}" is not a valid ${id} handle` },
+        { status: 400 },
+      );
+    }
+    handles[id as PlatformId] = raw;
+  }
+
+  if (Object.keys(handles).length === 0) {
+    return NextResponse.json({ error: 'add at least one handle' }, { status: 400 });
+  }
+
+  const key = `${timezone}|${days}|${PLATFORM_IDS.map((id) => handles[id] ?? '').join('|')}`;
+  const cached = readCache(key);
+  if (cached) {
+    return NextResponse.json(cached, { headers: { 'x-widgeto-cache': 'hit' } });
+  }
+
+  let activity: UnifiedActivity;
+  try {
+    activity = await aggregate(handles, {
+      timezone,
+      days,
+      githubToken: process.env.GITHUB_TOKEN,
+      timeoutMs: 12_000,
+    });
+  } catch (err) {
+    return NextResponse.json({ error: (err as Error).message }, { status: 502 });
+  }
+
+  const body = {
+    summary: activity.summary,
+    heatmap: attributeHeatmap(activity.platforms, days, timezone),
+    platforms: activity.platforms,
+  };
+
+  // Only cache a result that actually carries data; caching a total failure
+  // would lock the user out of a retry for ten minutes.
+  if (activity.platforms.some((p) => p.ok)) writeCache(key, body);
+
+  return NextResponse.json(body, {
+    headers: {
+      'x-widgeto-cache': 'miss',
+      // Let the CDN and the widget reuse this too.
+      'Cache-Control': 'public, max-age=300, stale-while-revalidate=1800',
+    },
+  });
+}

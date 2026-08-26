@@ -1,0 +1,172 @@
+/* Widgeto design tokens.
+   Dark-first and deliberately single-look: this is a tool that lives next to a
+   terminal and a contribution grid, and those are dark. */
+:root {
+  --bg: #08090b;
+  --bg-soft: #0e1015;
+  --surface: #14171d;
+  --surface-2: #1b1f27;
+  --line: #262b35;
+  --line-bright: #39404e;
+  --text: #eceef2;
+  --text-dim: #98a0ad;
+  --text-faint: #5f6773;
+
+  --github: #39d353;
+  --codeforces: #4aa3e0;
+  --leetcode: #ffa116;
+
+  --flame: #ff7a45;
+  --flame-hot: #ffb43d;
+  --danger: #ff5c5c;
+
+  --radius: 14px;
+  --radius-lg: 22px;
+  --maxw: 1080px;
+
+  --font-display: 'Instrument Serif', ui-serif, Georgia, serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+body {
+  /* A faint grid-of-squares wash, echoing the contribution grid the whole
+     product is built on, without competing with the real one. */
+  background-image:
+    radial-gradient(900px 500px at 50% -10%, rgba(57, 211, 83, 0.07), transparent 70%),
+    radial-gradient(700px 400px at 85% 5%, rgba(255, 161, 22, 0.05), transparent 70%);
+  background-repeat: no-repeat;
+}
+
+a { color: inherit; }
+
+.wrap {
+  max-width: var(--maxw);
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+/* ---- type ---- */
+.display {
+  font-family: var(--font-display);
+  font-weight: 400;
+  letter-spacing: -0.02em;
+  line-height: 0.98;
+  margin: 0;
+}
+.mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+.dim { color: var(--text-dim); }
+.faint { color: var(--text-faint); }
+
+.eyebrow {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+
+/* ---- surfaces ---- */
+.card {
+  background: linear-gradient(180deg, var(--surface) 0%, var(--bg-soft) 100%);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+}
+
+/* ---- controls ---- */
+.field {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 0 14px;
+  height: 46px;
+  transition: border-color 140ms ease, box-shadow 140ms ease;
+}
+.field:focus-within {
+  border-color: var(--accent, var(--line-bright));
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent, #fff) 16%, transparent);
+}
+.field input {
+  flex: 1;
+  min-width: 0;
+  background: none;
+  border: none;
+  outline: none;
+  color: var(--text);
+  font-family: var(--font-mono);
+  font-size: 14px;
+}
+.field input::placeholder { color: var(--text-faint); }
+
+.btn {
+  font-family: var(--font-sans);
+  font-size: 15px;
+  font-weight: 600;
+  color: #07110a;
+  background: linear-gradient(180deg, #4ae168, var(--github));
+  border: none;
+  border-radius: var(--radius);
+  height: 46px;
+  padding: 0 22px;
+  cursor: pointer;
+  transition: transform 120ms ease, filter 120ms ease;
+}
+.btn:hover:not(:disabled) { filter: brightness(1.08); }
+.btn:active:not(:disabled) { transform: translateY(1px); }
+.btn:disabled { opacity: 0.45; cursor: not-allowed; }
+
+.btn-ghost {
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  color: var(--text);
+}
+.btn-ghost:hover:not(:disabled) { border-color: var(--line-bright); }
+
+/* ---- contribution grid ---- */
+.grid-scroll { overflow-x: auto; padding-bottom: 6px; }
+.grid-scroll::-webkit-scrollbar { height: 6px; }
+.grid-scroll::-webkit-scrollbar-thumb { background: var(--line); border-radius: 3px; }
+
+.cell {
+  rx: 2;
+  /* Staggered reveal: the grid fills in the way a year actually accumulated. */
+  animation: pop 420ms cubic-bezier(0.2, 0.8, 0.3, 1) backwards;
+}
+@keyframes pop {
+  from { opacity: 0; transform: scale(0.4); }
+  to   { opacity: 1; transform: scale(1); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .cell { animation: none; }
+}
+
+/* ---- misc ---- */
+.tag {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 3px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  color: var(--text-dim);
+}
+.tag.ok { color: var(--github); border-color: color-mix(in srgb, var(--github) 40%, transparent); }
+.tag.warn { color: var(--leetcode); border-color: color-mix(in srgb, var(--leetcode) 40%, transparent); }
+
+hr.rule { border: none; border-top: 1px solid var(--line); margin: 0; }

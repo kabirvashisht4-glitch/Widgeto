@@ -11,7 +11,7 @@
  * treated as *pending*: the streak stays alive and is reported `at-risk` until
  * either activity lands or the day actually ends.
  */
-import type { DayCount, StreakStatus, StreakSummary } from './types.ts';
+import type { DayCount, PlatformId, StreakStatus, StreakSummary } from './types.ts';
 import { addDays, dateRange, today as todayIn } from './util/time.ts';
 
 /** Collapse many platforms' sparse day lists into one date → count map. */
@@ -104,5 +104,45 @@ export function intensityLevels(heatmap: DayCount[]): number[] {
     if (ratio > 0.33) return 3;
     if (ratio > 0.12) return 2;
     return 1;
+  });
+}
+
+/** A heatmap cell that remembers *where* the day's activity came from. */
+export interface AttributedDay extends DayCount {
+  /** Contribution count per platform for this day. */
+  byPlatform: Partial<Record<PlatformId, number>>;
+}
+
+/**
+ * Build a heatmap that keeps platform attribution per day.
+ *
+ * This powers Widgeto's signature visual: a grid where the colour of a square
+ * says *which* platform you were on, and days spent across several platforms
+ * blend into a mixed colour. A normal contribution grid can only say "you did
+ * something". This one says what — which is the entire point of unifying.
+ */
+export function attributeHeatmap(
+  platforms: { platform: PlatformId; ok: boolean; days: DayCount[] }[],
+  days: number,
+  timezone: string,
+  now = Date.now(),
+): AttributedDay[] {
+  const index = new Map<string, Partial<Record<PlatformId, number>>>();
+  for (const p of platforms) {
+    if (!p.ok) continue;
+    for (const { date, count } of p.days) {
+      if (count <= 0) continue;
+      const entry = index.get(date) ?? {};
+      entry[p.platform] = (entry[p.platform] ?? 0) + count;
+      index.set(date, entry);
+    }
+  }
+
+  const end = todayIn(timezone, now);
+  const start = addDays(end, -days + 1);
+  return dateRange(start, end).map((date) => {
+    const byPlatform = index.get(date) ?? {};
+    const count = Object.values(byPlatform).reduce((a: number, b) => a + (b ?? 0), 0);
+    return { date, count, byPlatform };
   });
 }
