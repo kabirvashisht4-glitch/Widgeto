@@ -1,0 +1,28 @@
+name: widgeto
+description: One streak across every platform you code on.
+publish_to: 'none'
+version: 0.1.0+1
+
+environment:
+  sdk: '>=3.4.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  # Bridges Flutter <-> the native home-screen widgets. Home-screen widgets
+  # cannot be drawn by Flutter: iOS needs WidgetKit/SwiftUI and Android needs
+  # Glance/RemoteViews, so Flutter owns the app and the native layers own the
+  # widget faces. This package moves data between them and triggers reloads.
+  home_widget: ^0.7.0
+  http: ^1.2.0
+  shared_preferences: ^2.3.0
+  # Background refresh so the widget can update without the app being opened.
+  workmanager: ^0.5.2
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
+
+flutter:
+  uses-material-design: true
