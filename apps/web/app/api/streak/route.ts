@@ -6,7 +6,7 @@
  * polite caller instead of one per widget refresh.
  */
 import { NextRequest, NextResponse } from 'next/server';
-import { aggregate, attributeHeatmap, PLATFORM_IDS, safeTimezone } from '@widgeto/core';
+import { aggregate, attributeHeatmap, normalizeHandle, PLATFORM_IDS, safeTimezone } from '@widgeto/core';
 import type { HandleMap, PlatformId, UnifiedActivity } from '@widgeto/core';
 
 export const runtime = 'nodejs';
@@ -44,9 +44,6 @@ function writeCache(key: string, body: unknown, ttl: number) {
   while (cache.size > MAX_ENTRIES) cache.delete(cache.keys().next().value as string);
 }
 
-/** Handles are user input heading for a URL — keep them to plausible shapes. */
-const HANDLE_RE = /^[A-Za-z0-9_.-]{1,39}$/;
-
 export async function GET(req: NextRequest) {
   const params = req.nextUrl.searchParams;
   const timezone = safeTimezone(params.get('tz') ?? undefined);
@@ -56,13 +53,17 @@ export async function GET(req: NextRequest) {
   for (const id of PLATFORM_IDS) {
     const raw = params.get(id)?.trim();
     if (!raw) continue;
-    if (!HANDLE_RE.test(raw)) {
+    // Accepts a bare handle, an @handle, or a pasted profile URL — people
+    // paste the page they already have open far more often than they type a
+    // bare username.
+    const handle = normalizeHandle(raw);
+    if (!handle) {
       return NextResponse.json(
-        { error: `"${raw}" is not a valid ${id} handle` },
+        { error: `Couldn't read a ${id} username from "${raw}".` },
         { status: 400 },
       );
     }
-    handles[id as PlatformId] = raw;
+    handles[id as PlatformId] = handle;
   }
 
   if (Object.keys(handles).length === 0) {
