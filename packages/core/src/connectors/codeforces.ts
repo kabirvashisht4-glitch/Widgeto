@@ -11,7 +11,7 @@
  * the API layer caches aggressively rather than polling per widget refresh.
  */
 import type { DayCount, FetchContext, PlatformResult, Stat } from '../types.ts';
-import { ConnectorError, getJson } from '../util/http.ts';
+import { ConnectorError, request } from '../util/http.ts';
 import { addDays, daysBetween, localDateFromSeconds, today } from '../util/time.ts';
 
 const API = 'https://codeforces.com/api';
@@ -57,12 +57,25 @@ interface CfSubmission {
 }
 
 async function cfCall<T>(path: string, ctx: FetchContext): Promise<T> {
-  const body = await getJson<CfEnvelope<T>>(`${API}/${path}`, {
+  const res = await request(`${API}/${path}`, {
     headers: { 'User-Agent': 'Widgeto' },
     fetchImpl: ctx.fetchImpl,
     timeoutMs: ctx.timeoutMs,
   });
-  if (body.status !== 'OK') throw new ConnectorError(body.comment ?? 'Codeforces returned FAILED');
+
+  // Codeforces signals "no such handle" as a 400 whose body explains exactly
+  // what is wrong. Failing on the status code alone would throw that away and
+  // leave the user staring at "400" with no idea their handle is misspelled.
+  let body: CfEnvelope<T> | null = null;
+  try {
+    body = (await res.json()) as CfEnvelope<T>;
+  } catch {
+    throw new ConnectorError(`Codeforces returned ${res.status}`);
+  }
+
+  if (body.status !== 'OK') {
+    throw new ConnectorError(body.comment ?? `Codeforces returned ${res.status}`);
+  }
   return body.result;
 }
 
