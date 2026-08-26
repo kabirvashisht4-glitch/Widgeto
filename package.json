@@ -1,0 +1,8 @@
+{
+  "name": "widgeto",
+  "private": true,
+  "version": "0.1.0",
+  "description": "One streak across every platform you code on.",
+  "workspaces": ["packages/*", "apps/*"],
+  "engines": { "node": ">=22" }
+}
