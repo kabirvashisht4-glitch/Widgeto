@@ -20,13 +20,16 @@ export const dynamic = 'force-dynamic';
  * same and the reasoning does not change.
  */
 const TTL_MS = 10 * 60 * 1000;
+/** A result with a failed connector is cached briefly, so a transient upstream
+ *  blip cannot freeze a broken row in place for a full ten minutes. */
+const PARTIAL_TTL_MS = 2 * 60 * 1000;
 const MAX_ENTRIES = 500;
-const cache = new Map<string, { at: number; body: unknown }>();
+const cache = new Map<string, { at: number; ttl: number; body: unknown }>();
 
 function readCache(key: string) {
   const hit = cache.get(key);
   if (!hit) return null;
-  if (Date.now() - hit.at > TTL_MS) {
+  if (Date.now() - hit.at > hit.ttl) {
     cache.delete(key);
     return null;
   }
@@ -36,8 +39,8 @@ function readCache(key: string) {
   return hit.body;
 }
 
-function writeCache(key: string, body: unknown) {
-  cache.set(key, { at: Date.now(), body });
+function writeCache(key: string, body: unknown, ttl: number) {
+  cache.set(key, { at: Date.now(), ttl, body });
   while (cache.size > MAX_ENTRIES) cache.delete(cache.keys().next().value as string);
 }
 
@@ -92,7 +95,9 @@ export async function GET(req: NextRequest) {
 
   // Only cache a result that actually carries data; caching a total failure
   // would lock the user out of a retry for ten minutes.
-  if (activity.platforms.some((p) => p.ok)) writeCache(key, body);
+  const anyOk = activity.platforms.some((p) => p.ok);
+  const allOk = activity.platforms.every((p) => p.ok);
+  if (anyOk) writeCache(key, body, allOk ? TTL_MS : PARTIAL_TTL_MS);
 
   return NextResponse.json(body, {
     headers: {
