@@ -11,10 +11,19 @@ import '../../ui/theme.dart';
 /// Widgeto has over every connector product that must put a sign-in wall in
 /// front of a first-run user, and the screen should feel like it.
 class ConnectScreen extends StatefulWidget {
-  const ConnectScreen({super.key, required this.initial, required this.onDone});
+  const ConnectScreen({
+    super.key,
+    required this.initial,
+    required this.onDone,
+    this.embedded = false,
+  });
 
   final Map<String, String> initial;
   final ValueChanged<Map<String, String>> onDone;
+
+  /// True when shown as a tab inside the main shell rather than as the
+  /// first-run screen, which changes the framing and the button's wording.
+  final bool embedded;
 
   @override
   State<ConnectScreen> createState() => _ConnectScreenState();
@@ -113,10 +122,10 @@ class _ConnectScreenState extends State<ConnectScreen> {
               child: ListView(
                 padding: const EdgeInsets.fromLTRB(22, 26, 22, 20),
                 children: [
-                  Text('CONNECT',
+                  Text(widget.embedded ? 'SOURCES' : 'CONNECT',
                       style: Theme.of(context).textTheme.labelSmall),
                   const SizedBox(height: 12),
-                  Text('Where do you\ncode?',
+                  Text(widget.embedded ? 'Your platforms' : 'Where do you\ncode?',
                       style: Theme.of(context).textTheme.headlineLarge),
                   const SizedBox(height: 14),
                   Text(
@@ -162,7 +171,9 @@ class _ConnectScreenState extends State<ConnectScreen> {
                 onPressed: connected == 0 ? null : () => widget.onDone(_handles),
                 child: Text(connected == 0
                     ? 'Add at least one'
-                    : 'Build my streak  ·  $connected connected'),
+                    : widget.embedded
+                        ? 'Save  ·  $connected connected'
+                        : 'Build my streak  ·  $connected connected'),
               ),
             ),
           ],

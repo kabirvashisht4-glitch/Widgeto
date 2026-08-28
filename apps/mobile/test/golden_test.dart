@@ -6,15 +6,19 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:widgeto/data/models.dart';
+import 'package:widgeto/data/widget_config.dart';
 import 'package:widgeto/features/connect/connect_screen.dart';
-import 'package:widgeto/features/preview/preview_screen.dart';
+import 'package:widgeto/features/gallery/gallery_screen.dart';
+import 'package:widgeto/features/insights/insights_screen.dart';
+import 'package:widgeto/features/studio/studio_screen.dart';
 import 'package:widgeto/ui/theme.dart';
-import 'package:widgeto/widgets/widget_face.dart';
+import 'package:widgeto/widgets/faces/widget_face.dart';
 
-/// Renders the real screens to PNG, so the app's look can be reviewed without
-/// a device — and so an accidental layout regression shows up as a diff rather
-/// than as something nobody noticed until it shipped.
+import 'support/sample.dart';
+
+/// Renders the real screens to PNG, so the design can be reviewed without a
+/// device and a layout regression shows up as a diff rather than as something
+/// nobody noticed until it shipped.
 ///
 /// Regenerate with:  flutter test --update-goldens test/golden_test.dart
 
@@ -40,94 +44,12 @@ Future<void> _loadRealFonts() async {
   }
 }
 
-Activity _activity() => Activity.fromJson({
-      'summary': {
-        'timezone': 'Asia/Kolkata',
-        'today': '2026-08-28',
-        'activeToday': false,
-        'status': 'at-risk',
-        'currentStreak': 59,
-        'longestStreak': 80,
-        'totalActiveDays': 355,
-        'totalContributions': 4032,
-      },
-      // A year that actually mixes platforms, so the blend is visible.
-      'heatmap': [
-        for (var i = 0; i < 365; i++)
-          {
-            'date': DateTime(2025, 8, 29)
-                .add(Duration(days: i))
-                .toIso8601String()
-                .substring(0, 10),
-            'count': [0, 3, 7, 2, 11, 0, 5, 9][i % 8],
-            'byPlatform': switch (i % 7) {
-              0 => <String, int>{},
-              1 => {'github': 6},
-              2 => {'leetcode': 4},
-              3 => {'github': 5, 'leetcode': 3},
-              4 => {'codeforces': 7},
-              5 => {'github': 9, 'atcoder': 2},
-              _ => {'github': 3, 'codeforces': 2, 'leetcode': 4},
-            },
-          },
-      ],
-      'platforms': [
-        {
-          'platform': 'github',
-          'handle': 'torvalds',
-          'ok': true,
-          'profile': {
-            'stats': [
-              {'label': 'contributions', 'value': 3595},
-              {'label': 'stars', 'value': 256566},
-              {'label': 'followers', 'value': 318551},
-            ],
-          },
-        },
-        {
-          'platform': 'codeforces',
-          'handle': 'tourist',
-          'ok': true,
-          'profile': {
-            'stats': [
-              {'label': 'rating', 'value': 3528},
-              {'label': 'peak', 'value': 4009},
-              {'label': 'solved', 'value': 171},
-            ],
-          },
-        },
-        {
-          'platform': 'leetcode',
-          'handle': 'lee215',
-          'ok': true,
-          'profile': {
-            'stats': [
-              {'label': 'solved', 'value': 668},
-              {'label': 'medium', 'value': 400},
-              {'label': 'hard', 'value': 144},
-            ],
-          },
-        },
-        {
-          'platform': 'atcoder',
-          'handle': 'tourist',
-          'ok': true,
-          'profile': {
-            'stats': [
-              {'label': 'solved', 'value': 1057},
-              {'label': 'rank', 'value': '#4,414'},
-            ],
-          },
-        },
-      ],
-    });
-
-Widget _phone(Widget child, Brightness brightness) {
+Widget _app(Widget child, Brightness brightness) {
   final base = widgetoTheme(brightness);
   return MaterialApp(
     debugShowCheckedModeBanner: false,
-    // Pin the family for the golden only. The app deliberately leaves it
-    // unset so each platform uses its own system face; a golden needs one
+    // Pin the family for the golden only. The app deliberately leaves it unset
+    // so each platform uses its own system face; a golden needs one
     // deterministic font or the image changes with the host.
     theme: base.copyWith(
       textTheme: base.textTheme.apply(fontFamily: 'Roboto'),
@@ -150,15 +72,18 @@ Widget _phone(Widget child, Brightness brightness) {
   );
 }
 
+void _phone(WidgetTester tester, {double height = 2436}) {
+  tester.view.physicalSize = Size(1125, height);
+  tester.view.devicePixelRatio = 3;
+  addTearDown(tester.view.reset);
+}
+
 void main() {
   setUpAll(_loadRealFonts);
 
   testWidgets('golden: connect screen', (tester) async {
-    tester.view.physicalSize = const Size(1125, 2436);
-    tester.view.devicePixelRatio = 3;
-    addTearDown(tester.view.reset);
-
-    await tester.pumpWidget(_phone(
+    _phone(tester);
+    await tester.pumpWidget(_app(
       ConnectScreen(
         initial: const {'github': 'torvalds', 'codeforces': 'tourist'},
         onDone: (_) {},
@@ -166,60 +91,140 @@ void main() {
       Brightness.dark,
     ));
     await tester.pumpAndSettle();
-
-    await expectLater(
-      find.byType(ConnectScreen),
-      matchesGoldenFile('goldens/connect_screen.png'),
-    );
+    await expectLater(find.byType(ConnectScreen),
+        matchesGoldenFile('goldens/connect_screen.png'));
   });
 
-  testWidgets('golden: preview screen', (tester) async {
-    tester.view.physicalSize = const Size(1125, 2900);
-    tester.view.devicePixelRatio = 3;
-    addTearDown(tester.view.reset);
-
-    await tester.pumpWidget(_phone(
-      PreviewScreen(
-        activity: _activity(),
-        refreshing: false,
-        onRefresh: () async {},
-        onEditHandles: () {},
+  testWidgets('golden: gallery', (tester) async {
+    _phone(tester, height: 2900);
+    await tester.pumpWidget(_app(
+      Scaffold(
+        body: GalleryScreen(
+          configs: const [
+            WidgetConfig(id: '1', name: 'Everything', template: FaceTemplate.grid),
+            WidgetConfig(
+                id: '2',
+                name: 'Just the number',
+                template: FaceTemplate.minimal,
+                size: FaceSize.small,
+                accent: Accent.ember),
+          ],
+          activity: sampleActivity(),
+          onEdit: (_) {},
+          onCreate: () {},
+          onRefresh: _noop,
+        ),
       ),
       Brightness.dark,
     ));
     await tester.pumpAndSettle();
-
     await expectLater(
-      find.byType(PreviewScreen),
-      matchesGoldenFile('goldens/preview_screen.png'),
-    );
+        find.byType(GalleryScreen), matchesGoldenFile('goldens/gallery.png'));
   });
 
-  for (final size in FaceSize.values) {
-    for (final entry in {'dark': Skin.dark, 'light': Skin.light}.entries) {
-      testWidgets('golden: ${size.label} face, ${entry.key}', (tester) async {
-        await tester.pumpWidget(_phone(
-          Scaffold(
-            backgroundColor: entry.value.surfaceAlt,
-            body: Center(
-              child: WidgetFace(
-                activity: _activity(),
-                size: size,
-                skin: entry.value,
-                animate: false,
-              ),
+  testWidgets('golden: studio', (tester) async {
+    _phone(tester, height: 3400);
+    await tester.pumpWidget(_app(
+      StudioScreen(
+        config: const WidgetConfig(
+            id: '1', name: 'Everything', template: FaceTemplate.grid),
+        activity: sampleActivity(),
+        connected: const ['github', 'codeforces', 'leetcode', 'atcoder'],
+        onSave: (_) {},
+        onDelete: () {},
+      ),
+      Brightness.dark,
+    ));
+    await tester.pumpAndSettle();
+    await expectLater(
+        find.byType(StudioScreen), matchesGoldenFile('goldens/studio.png'));
+  });
+
+  testWidgets('golden: insights', (tester) async {
+    _phone(tester, height: 3600);
+    await tester.pumpWidget(_app(
+      Scaffold(
+        body: InsightsScreen(activity: sampleActivity(), onRefresh: _noop),
+      ),
+      Brightness.dark,
+    ));
+    await tester.pumpAndSettle();
+    await expectLater(
+        find.byType(InsightsScreen), matchesGoldenFile('goldens/insights.png'));
+  });
+
+  // One image per layout, so a change to any template is visible in review.
+  for (final template in FaceTemplate.values) {
+    testWidgets('golden: ${template.label} face', (tester) async {
+      // Small + medium + large stacked need more than the default surface.
+      _phone(tester, height: 2400);
+      await tester.pumpWidget(_app(
+        Scaffold(
+          backgroundColor: Skin.dark.surfaceAlt,
+          body: Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                for (final size in FaceSize.values)
+                  Padding(
+                    padding: const EdgeInsets.all(9),
+                    child: WidgetFace(
+                      activity: sampleActivity(),
+                      config: WidgetConfig(
+                          id: 'g', template: template, size: size),
+                      animate: false,
+                    ),
+                  ),
+              ],
             ),
           ),
-          Brightness.dark,
-        ));
-        await tester.pumpAndSettle();
-
-        await expectLater(
-          find.byType(WidgetFace),
-          matchesGoldenFile(
-              'goldens/face_${size.name}_${entry.key}.png'),
-        );
-      });
-    }
+        ),
+        Brightness.dark,
+      ));
+      await tester.pumpAndSettle();
+      await expectLater(find.byType(Column).first,
+          matchesGoldenFile('goldens/template_${template.name}.png'));
+    });
   }
+
+  testWidgets('golden: light palette', (tester) async {
+    _phone(tester, height: 1800);
+    await tester.pumpWidget(_app(
+      Scaffold(
+        backgroundColor: Skin.light.surfaceAlt,
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              for (final template in [
+                FaceTemplate.grid,
+                FaceTemplate.ring,
+                FaceTemplate.split
+              ])
+                Padding(
+                  padding: const EdgeInsets.all(9),
+                  child: WidgetFace(
+                    activity: sampleActivity(),
+                    config: WidgetConfig(
+                      id: 'g',
+                      template: template,
+                      size: FaceSize.medium,
+                      skin: WidgetSkin.light,
+                      accent: Accent.ember,
+                    ),
+                    animate: false,
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ),
+      Brightness.light,
+    ));
+    await tester.pumpAndSettle();
+    await expectLater(find.byType(Column).first,
+        matchesGoldenFile('goldens/light_palette.png'));
+  });
 }
+
+Future<void> _noop() async {}
