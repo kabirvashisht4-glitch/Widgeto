@@ -144,3 +144,24 @@ test('heatmap attribution records which platform each day came from', async () =
   assert.deepEqual(today.byPlatform, { github: 4, leetcode: 2 });
   assert.deepEqual(grid[0].byPlatform, {}, 'quiet days carry an empty attribution');
 });
+
+test('a UTC offset works as a timezone, for clients that cannot name theirs', async () => {
+  const { localDate, safeTimezone, today } = await import('../src/util/time.ts');
+  // 2026-08-26T19:00Z is already the 27th at +05:30, still the 26th at -04:00.
+  const instant = Date.parse('2026-08-26T19:00:00Z');
+
+  assert.equal(localDate(instant, 'UTC+05:30'), '2026-08-27');
+  assert.equal(localDate(instant, 'UTC-04:00'), '2026-08-26');
+  // Matches what the IANA name gives for the same instant.
+  assert.equal(localDate(instant, 'UTC+05:30'), localDate(instant, 'Asia/Kolkata'));
+
+  assert.equal(safeTimezone('UTC+05:30'), 'UTC+05:30');
+  assert.equal(today('UTC+05:30', instant), '2026-08-27');
+
+  // Intl does accept bare abbreviations, and they are better than falling all
+  // the way back to UTC — but they are a trap, not a feature: `EST` is a
+  // *fixed* -5 zone with no daylight saving, so a New Yorker sending it would
+  // be an hour out for half the year. Clients send an offset for this reason.
+  assert.equal(localDate(instant, 'IST'), '2026-08-27');
+  assert.equal(safeTimezone('Mars/Olympus'), 'UTC', 'genuine nonsense still falls back');
+});

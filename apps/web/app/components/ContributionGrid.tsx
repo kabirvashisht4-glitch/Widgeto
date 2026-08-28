@@ -19,6 +19,7 @@ export const PLATFORM_COLORS: Record<PlatformId, string> = {
   github: '#39d353',
   codeforces: '#4aa3e0',
   leetcode: '#ffa116',
+  atcoder: '#b08d4f',
 };
 
 const EMPTY = '#1a1e26';

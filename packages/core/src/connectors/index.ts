@@ -8,6 +8,7 @@ import type { FetchContext, PlatformId, PlatformResult } from '../types.ts';
 import { fetchGitHub } from './github.ts';
 import { fetchLeetCode } from './leetcode.ts';
 import { fetchCodeforces } from './codeforces.ts';
+import { fetchAtCoder } from './atcoder.ts';
 
 export type Connector = (handle: string, ctx: FetchContext) => Promise<PlatformResult>;
 
@@ -42,6 +43,14 @@ export const CONNECTORS: Record<PlatformId, ConnectorMeta> = {
     handleHint: 'tourist',
     support: 'official',
     fetch: fetchCodeforces,
+  },
+  atcoder: {
+    id: 'atcoder',
+    name: 'AtCoder',
+    color: '#b08d4f',
+    handleHint: 'tourist',
+    support: 'unofficial',
+    fetch: fetchAtCoder,
   },
   leetcode: {
     id: 'leetcode',

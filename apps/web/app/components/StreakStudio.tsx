@@ -24,12 +24,14 @@ const FIELDS: { id: PlatformId; label: string; hint: string; support: 'official'
   { id: 'github', label: 'GitHub', hint: 'torvalds', support: 'official' },
   { id: 'codeforces', label: 'Codeforces', hint: 'tourist', support: 'official' },
   { id: 'leetcode', label: 'LeetCode', hint: 'lee215', support: 'unofficial' },
+  { id: 'atcoder', label: 'AtCoder', hint: 'tourist', support: 'unofficial' },
 ];
 
 const DEMO: Record<PlatformId, string> = {
   github: 'torvalds',
   codeforces: 'tourist',
   leetcode: 'lee215',
+  atcoder: 'tourist',
 };
 
 export default function StreakStudio() {

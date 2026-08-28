@@ -7,8 +7,31 @@
  * nowhere else.
  */
 
+/**
+ * A zone can arrive two ways.
+ *
+ * The web knows its IANA name (`Asia/Kolkata`). A mobile platform often only
+ * exposes an abbreviation like `IST`, which is ambiguous — India and Israel
+ * both claim it — so the app sends its raw UTC offset instead. Accepting both
+ * means neither client has to guess, and a client that cannot name its zone
+ * still gets its day boundaries right.
+ */
+const OFFSET_RE = /^UTC([+-])(\d{1,2}):?(\d{2})?$/i;
+
+function offsetMinutes(tz: string): number | null {
+  const m = OFFSET_RE.exec(tz.trim());
+  if (!m) return null;
+  const minutes = Number(m[2]) * 60 + Number(m[3] ?? 0);
+  return m[1] === '-' ? -minutes : minutes;
+}
+
 /** `YYYY-MM-DD` for an instant, as seen from `tz`. */
 export function localDate(epochMs: number, tz: string): string {
+  const offset = offsetMinutes(tz);
+  if (offset !== null) {
+    // Shift the instant, then read the date off in UTC.
+    return new Date(epochMs + offset * 60_000).toISOString().slice(0, 10);
+  }
   // en-CA formats as YYYY-MM-DD, which saves hand-assembling parts.
   return new Intl.DateTimeFormat('en-CA', {
     timeZone: tz,
@@ -57,9 +80,13 @@ export function dateRange(start: string, end: string): string[] {
   return out;
 }
 
-/** Validate an IANA zone, falling back to UTC rather than throwing. */
+/**
+ * Validate a zone, falling back to UTC rather than throwing.
+ * Accepts an IANA name or a `UTC+05:30` style offset.
+ */
 export function safeTimezone(tz: string | undefined): string {
   if (!tz) return 'UTC';
+  if (offsetMinutes(tz) !== null) return tz.toUpperCase().replace(/^UTC([+-])(\d):/, 'UTC$10$2:');
   try {
     new Intl.DateTimeFormat('en-CA', { timeZone: tz });
     return tz;

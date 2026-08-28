@@ -12,7 +12,7 @@ class WidgetoApi {
     defaultValue: 'https://widgeto.vercel.app',
   );
 
-  static const platforms = ['github', 'codeforces', 'leetcode'];
+  static const platforms = ['github', 'codeforces', 'leetcode', 'atcoder'];
 
   static Future<Map<String, String>> loadHandles() async {
     final prefs = await SharedPreferences.getInstance();
@@ -36,11 +36,26 @@ class WidgetoApi {
     }
   }
 
+  /// The device's current UTC offset, as `UTC+05:30`.
+  ///
+  /// Flutter exposes `timeZoneName` as an abbreviation like `IST`, which is
+  /// ambiguous between India and Israel; and abbreviations such as `EST` mean
+  /// a *fixed* offset with no daylight saving, so they drift for half the year.
+  /// The raw offset has neither problem — it is exactly right for today, which
+  /// is all a streak needs.
+  static String _deviceZone() {
+    final offset = DateTime.now().timeZoneOffset;
+    final sign = offset.isNegative ? '-' : '+';
+    final h = offset.inHours.abs().toString().padLeft(2, '0');
+    final m = (offset.inMinutes.abs() % 60).toString().padLeft(2, '0');
+    return 'UTC$sign$h:$m';
+  }
+
   static Future<Activity> fetch(Map<String, String> handles, {String? timezone}) async {
     final query = <String, String>{
       // The server computes the streak in this zone. Getting it from the device
       // is the whole reason streaks line up with what the user expects.
-      'tz': timezone ?? DateTime.now().timeZoneName,
+      'tz': timezone ?? _deviceZone(),
     };
     handles.forEach((k, v) {
       if (v.trim().isNotEmpty) query[k] = v.trim();

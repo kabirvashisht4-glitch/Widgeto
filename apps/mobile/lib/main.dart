@@ -7,6 +7,8 @@ import 'ui/theme.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  // Best-effort: init() swallows its own failures so a missing or unhappy
+  // widget plugin can never stop the app from starting.
   await WidgetBridge.init();
   runApp(const WidgetoApp());
 }
