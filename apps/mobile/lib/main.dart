@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+
 import 'data/api.dart';
 import 'data/models.dart';
 import 'data/widget_bridge.dart';
-import 'ui/grid.dart';
+import 'features/connect/connect_screen.dart';
+import 'features/preview/preview_screen.dart';
 import 'ui/theme.dart';
 
 void main() async {
@@ -20,10 +22,16 @@ class WidgetoApp extends StatelessWidget {
   Widget build(BuildContext context) => MaterialApp(
         title: 'Widgeto',
         debugShowCheckedModeBanner: false,
-        theme: widgetoTheme,
+        theme: widgetoTheme(Brightness.light),
+        darkTheme: widgetoTheme(Brightness.dark),
+        themeMode: ThemeMode.system,
         home: const HomeScreen(),
       );
 }
+
+/// What the app is doing right now. Modelled explicitly so every state gets a
+/// designed screen instead of a spinner standing in for three different things.
+enum _Phase { loading, connect, ready, failed }
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -33,12 +41,11 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  final _controllers = {
-    for (final p in WidgetoApi.platforms) p: TextEditingController(),
-  };
+  _Phase _phase = _Phase.loading;
+  Map<String, String> _handles = {};
   Activity? _activity;
-  bool _loading = false;
   String? _error;
+  bool _refreshing = false;
 
   @override
   void initState() {
@@ -46,129 +53,127 @@ class _HomeScreenState extends State<HomeScreen> {
     _restore();
   }
 
-  @override
-  void dispose() {
-    for (final c in _controllers.values) {
-      c.dispose();
-    }
-    super.dispose();
-  }
-
   Future<void> _restore() async {
     final saved = await WidgetoApi.loadHandles();
-    if (saved.isEmpty) return;
-    saved.forEach((k, v) => _controllers[k]?.text = v);
-    if (mounted) _refresh();
-  }
-
-  Future<void> _refresh() async {
-    final handles = {
-      for (final e in _controllers.entries) e.key: e.value.text.trim(),
-    }..removeWhere((_, v) => v.isEmpty);
-
-    if (handles.isEmpty) {
-      setState(() => _error = 'Add at least one handle.');
+    if (!mounted) return;
+    if (saved.isEmpty) {
+      setState(() => _phase = _Phase.connect);
       return;
     }
+    _handles = saved;
+    await _load();
+  }
 
+  Future<void> _load() async {
     setState(() {
-      _loading = true;
+      _refreshing = true;
       _error = null;
     });
 
     try {
-      final activity = await WidgetoApi.fetch(handles);
-      await WidgetoApi.saveHandles(handles);
-      // Push to the home screen immediately so the widget is never staler
-      // than the app the user is looking at.
+      final activity = await WidgetoApi.fetch(_handles);
+      await WidgetoApi.saveHandles(_handles);
+      // Push immediately, so the home screen is never staler than the app the
+      // user is looking at.
       await WidgetBridge.push(activity);
-      if (mounted) setState(() => _activity = activity);
+      if (!mounted) return;
+      setState(() {
+        _activity = activity;
+        _phase = _Phase.ready;
+      });
     } catch (err) {
-      if (mounted) setState(() => _error = '$err');
+      if (!mounted) return;
+      setState(() {
+        _error = '$err';
+        // Keep showing the last good data if we have it; a failed refresh is
+        // no reason to throw away a working screen.
+        _phase = _activity == null ? _Phase.failed : _Phase.ready;
+      });
     } finally {
-      if (mounted) setState(() => _loading = false);
+      if (mounted) setState(() => _refreshing = false);
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final a = _activity;
+    return AnimatedSwitcher(
+      duration: const Duration(milliseconds: 260),
+      child: switch (_phase) {
+        _Phase.loading => const _Splash(key: ValueKey('loading')),
+        _Phase.connect => ConnectScreen(
+            key: const ValueKey('connect'),
+            initial: _handles,
+            onDone: (handles) {
+              _handles = handles;
+              _load();
+            },
+          ),
+        _Phase.ready => PreviewScreen(
+            key: const ValueKey('ready'),
+            activity: _activity!,
+            refreshing: _refreshing,
+            onRefresh: _load,
+            onEditHandles: () => setState(() => _phase = _Phase.connect),
+          ),
+        _Phase.failed => _Failed(
+            key: const ValueKey('failed'),
+            message: _error ?? 'Something went wrong.',
+            onRetry: _load,
+            onEditHandles: () => setState(() => _phase = _Phase.connect),
+          ),
+      },
+    );
+  }
+}
 
+/// A quiet first frame: the mark, and nothing else claiming to know anything.
+class _Splash extends StatelessWidget {
+  const _Splash({super.key});
+
+  @override
+  Widget build(BuildContext context) => const Scaffold(
+        body: Center(child: WidgetoMark(size: 34)),
+      );
+}
+
+class _Failed extends StatelessWidget {
+  const _Failed({
+    super.key,
+    required this.message,
+    required this.onRetry,
+    required this.onEditHandles,
+  });
+
+  final String message;
+  final VoidCallback onRetry;
+  final VoidCallback onEditHandles;
+
+  @override
+  Widget build(BuildContext context) {
+    final skin = Skin.of(Theme.of(context).brightness);
     return Scaffold(
       body: SafeArea(
-        child: RefreshIndicator(
-          onRefresh: _refresh,
-          color: kGitHub,
-          backgroundColor: kSurface,
-          child: ListView(
-            padding: const EdgeInsets.fromLTRB(20, 24, 20, 48),
+        child: Padding(
+          padding: const EdgeInsets.all(28),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(children: [
-                const _Mark(),
-                const SizedBox(width: 10),
-                Text('Widgeto', style: Theme.of(context).textTheme.titleMedium),
-              ]),
-              const SizedBox(height: 26),
-
-              if (a != null) ...[
-                _StreakHeader(summary: a.summary),
-                const SizedBox(height: 22),
-                ContributionGrid(days: a.heatmap),
-                const SizedBox(height: 26),
-                ...a.platforms.map((p) => _PlatformRow(result: p)),
-                const SizedBox(height: 30),
-                const Divider(height: 1),
-                const SizedBox(height: 24),
-              ],
-
-              Text('Handles', style: Theme.of(context).textTheme.labelLarge),
+              const WidgetoMark(size: 28),
+              const SizedBox(height: 22),
+              Text("Couldn't reach your streak.",
+                  style: Theme.of(context).textTheme.headlineLarge),
               const SizedBox(height: 12),
-              ...WidgetoApi.platforms.map(
-                (p) => Padding(
-                  padding: const EdgeInsets.only(bottom: 10),
-                  child: TextField(
-                    controller: _controllers[p],
-                    autocorrect: false,
-                    enableSuggestions: false,
-                    style: const TextStyle(fontFamily: 'monospace'),
-                    decoration: InputDecoration(
-                      labelText: p,
-                      prefixIcon: Padding(
-                        padding: const EdgeInsets.all(16),
-                        child: Container(
-                          width: 8,
-                          height: 8,
-                          decoration: BoxDecoration(
-                            color: platformColor(p),
-                            borderRadius: BorderRadius.circular(2),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-
-              if (_error != null) ...[
-                const SizedBox(height: 8),
-                Text(_error!, style: const TextStyle(color: kDanger, fontSize: 13)),
-              ],
-
-              const SizedBox(height: 14),
-              FilledButton(
-                onPressed: _loading ? null : _refresh,
-                child: _loading
-                    ? const SizedBox(
-                        width: 18,
-                        height: 18,
-                        child: CircularProgressIndicator(strokeWidth: 2, color: Colors.black),
-                      )
-                    : const Text('Update my widget'),
-              ),
-              const SizedBox(height: 14),
-              Text(
-                'Public profiles only. Widgeto never asks for a password.',
-                style: Theme.of(context).textTheme.bodySmall,
+              // The real reason, not a generic apology — it is usually a typo
+              // or a dropped connection, and both are the user's to fix.
+              Text(message, style: const TextStyle(color: kDanger, fontSize: 13.5)),
+              const SizedBox(height: 30),
+              FilledButton(onPressed: onRetry, child: const Text('Try again')),
+              const SizedBox(height: 10),
+              TextButton(
+                onPressed: onEditHandles,
+                child: Text('Check my handles',
+                    style: TextStyle(color: skin.dim, fontWeight: FontWeight.w500)),
               ),
             ],
           ),
@@ -178,113 +183,38 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 }
 
-class _StreakHeader extends StatelessWidget {
-  const _StreakHeader({required this.summary});
-  final StreakSummary summary;
+/// Three squares: the contribution grid reduced to its atom.
+class WidgetoMark extends StatelessWidget {
+  const WidgetoMark({super.key, this.size = 22});
 
-  @override
-  Widget build(BuildContext context) {
-    final (label, color) = switch (summary.status) {
-      'safe' => ('done today', kGitHub),
-      'at-risk' => ('not yet today', kFlameHot),
-      _ => ('streak broken', kDanger),
-    };
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text('UNIFIED STREAK', style: Theme.of(context).textTheme.labelSmall),
-        const SizedBox(height: 6),
-        Row(crossAxisAlignment: CrossAxisAlignment.baseline,
-            textBaseline: TextBaseline.alphabetic,
-            children: [
-              Text(
-                '${summary.currentStreak}',
-                style: const TextStyle(
-                  fontSize: 68,
-                  height: 1,
-                  fontWeight: FontWeight.w700,
-                  color: kFlameHot,
-                  letterSpacing: -2,
-                ),
-              ),
-              const SizedBox(width: 10),
-              Text('days', style: Theme.of(context).textTheme.bodyMedium),
-            ]),
-        const SizedBox(height: 10),
-        Row(children: [
-          Container(width: 7, height: 7,
-              decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
-          const SizedBox(width: 7),
-          Text(label, style: TextStyle(color: color, fontSize: 12.5)),
-          const Spacer(),
-          Text('longest ${summary.longestStreak}d',
-              style: Theme.of(context).textTheme.bodySmall),
-        ]),
-      ],
-    );
-  }
-}
-
-class _PlatformRow extends StatelessWidget {
-  const _PlatformRow({required this.result});
-  final PlatformResult result;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 10),
-      child: Row(children: [
-        Container(
-          width: 8, height: 8,
-          decoration: BoxDecoration(
-            color: result.ok ? platformColor(result.platform) : kDanger,
-            borderRadius: BorderRadius.circular(2),
-          ),
-        ),
-        const SizedBox(width: 10),
-        SizedBox(
-          width: 120,
-          child: Text(result.handle,
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(fontFamily: 'monospace', fontSize: 13)),
-        ),
-        Expanded(
-          child: Text(
-            result.ok
-                ? result.stats.take(2).map((s) => '${s.value} ${s.label}').join('  ·  ')
-                : (result.error ?? 'unavailable'),
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(
-              fontSize: 12,
-              color: result.ok ? kTextFaint : kDanger,
-            ),
-          ),
-        ),
-      ]),
-    );
-  }
-}
-
-class _Mark extends StatelessWidget {
-  const _Mark();
+  final double size;
 
   @override
   Widget build(BuildContext context) => SizedBox(
-        width: 22, height: 22,
-        child: CustomPaint(painter: _MarkPainter()),
+        width: size,
+        height: size,
+        child: CustomPaint(painter: _MarkPainter(size)),
       );
 }
 
 class _MarkPainter extends CustomPainter {
+  _MarkPainter(this.size);
+
+  final double size;
+
   @override
-  void paint(Canvas canvas, Size size) {
+  void paint(Canvas canvas, Size s) {
+    final unit = size / 22;
     void square(double x, double y, Color c) {
       canvas.drawRRect(
-        RRect.fromRectAndRadius(Rect.fromLTWH(x, y, 8, 8), const Radius.circular(2)),
+        RRect.fromRectAndRadius(
+          Rect.fromLTWH(x * unit, y * unit, 8 * unit, 8 * unit),
+          Radius.circular(2 * unit),
+        ),
         Paint()..color = c,
       );
     }
+
     square(1, 12, kGitHub);
     square(12, 12, kLeetCode);
     square(6.5, 1.5, kCodeforces);

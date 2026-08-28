@@ -14,6 +14,16 @@ class WidgetoApi {
 
   static const platforms = ['github', 'codeforces', 'leetcode', 'atcoder'];
 
+  /// A real, recognisable handle per platform — a placeholder that shows the
+  /// shape expected beats one that just repeats the field name.
+  static String hintFor(String platform) => switch (platform) {
+        'github' => 'torvalds',
+        'codeforces' => 'tourist',
+        'leetcode' => 'lee215',
+        'atcoder' => 'tourist',
+        _ => 'username',
+      };
+
   static Future<Map<String, String>> loadHandles() async {
     final prefs = await SharedPreferences.getInstance();
     final out = <String, String>{};
