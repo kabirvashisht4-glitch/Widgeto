@@ -7,7 +7,7 @@
  * the widget renderer never learn anything platform-specific.
  */
 
-export type PlatformId = 'github' | 'leetcode' | 'codeforces';
+export type PlatformId = 'github' | 'leetcode' | 'codeforces' | 'atcoder';
 
 /** A calendar day (`YYYY-MM-DD`, user-local) and how much happened on it. */
 export interface DayCount {
@@ -93,6 +93,7 @@ export interface HandleMap {
   github?: string;
   leetcode?: string;
   codeforces?: string;
+  atcoder?: string;
 }
 
 export interface FetchContext {

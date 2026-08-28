@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import StreakStudio from './components/StreakStudio';
 
 const PLATFORMS = [
@@ -12,6 +13,12 @@ const PLATFORMS = [
     color: '#4aa3e0',
     support: 'official' as const,
     detail: 'Official public API. Per-submission timestamps, so days are exact.',
+  },
+  {
+    name: 'AtCoder',
+    color: '#b08d4f',
+    support: 'unofficial' as const,
+    detail: 'Community mirror at kenkoooo. Per-submission timestamps, so days are exact.',
   },
   {
     name: 'LeetCode',
@@ -29,11 +36,23 @@ export default function Home() {
         <Mark />
         <span style={{ fontWeight: 600, letterSpacing: '-0.01em' }}>Widgeto</span>
         <span className="tag" style={{ marginLeft: 6 }}>alpha</span>
+        <div style={{ marginLeft: 'auto', display: 'flex', gap: 20 }}>
+          <Link href="/compare" className="dim" style={{ fontSize: 14, textDecoration: 'none' }}>
+            Leaderboard
+          </Link>
+          <a
+            href="https://github.com/kabirvashisht4-glitch/Widgeto"
+            className="dim"
+            style={{ fontSize: 14, textDecoration: 'none' }}
+          >
+            Source
+          </a>
+        </div>
       </nav>
 
       {/* ---------- hero ---------- */}
       <section className="wrap" style={{ paddingTop: 40, paddingBottom: 56 }}>
-        <div className="eyebrow">github · codeforces · leetcode</div>
+        <div className="eyebrow">github · codeforces · leetcode · atcoder</div>
         <h1
           className="display"
           style={{ fontSize: 'clamp(52px, 9vw, 104px)', marginTop: 18, maxWidth: 900 }}
@@ -123,9 +142,35 @@ export default function Home() {
 
         <p className="faint" style={{ fontSize: 13.5, lineHeight: 1.6, marginTop: 20, maxWidth: 620 }}>
           Marked honestly on purpose. Unofficial sources can break without warning, so a dead
-          connector greys out one row — it never takes the widget down with it. Duolingo, AtCoder
-          and CodeChef are next.
+          connector greys out one row — it never takes the widget down with it. CodeChef and Stack Overflow are next.
         </p>
+      </section>
+
+      {/* ---------- readme badge ---------- */}
+      <section className="wrap" style={{ padding: '48px 24px' }}>
+        <div className="eyebrow">embed</div>
+        <h2 className="display" style={{ fontSize: 'clamp(30px, 4vw, 42px)', marginTop: 12 }}>
+          Your streak, in your README.
+        </h2>
+        <p className="dim" style={{ fontSize: 16, lineHeight: 1.65, marginTop: 18, maxWidth: 560 }}>
+          A live SVG that updates on its own. Build your streak above, then copy
+          the snippet from your profile page.
+        </p>
+
+        <div className="card" style={{ padding: 26, marginTop: 24, display: 'grid', gap: 18 }}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/api/badge?github=torvalds&codeforces=tourist&leetcode=lee215&style=card"
+            alt="Example Widgeto streak card"
+            style={{ maxWidth: '100%' }}
+          />
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/api/badge?github=torvalds&codeforces=tourist&style=flat"
+            alt="Example Widgeto flat streak badge"
+            style={{ height: 28 }}
+          />
+        </div>
       </section>
 
       {/* ---------- why ---------- */}
@@ -138,6 +183,10 @@ export default function Home() {
           <Feature
             title="A nudge before midnight"
             body="If the day is still empty at 9pm, your phone says so. The widget shows the streak; the notification is what saves it."
+          />
+          <Feature
+            title="A scoreboard with your friends"
+            body="Everyone's platforms merge the same way, so a GitHub-only streak and a LeetCode-only streak finally sit on one scale."
           />
           <Feature
             title="Just type your handle"
@@ -153,13 +202,18 @@ export default function Home() {
           <span className="faint" style={{ fontSize: 13 }}>
             Widgeto is independent and not affiliated with GitHub, Codeforces or LeetCode.
           </span>
-          <a
-            className="mono faint"
-            style={{ fontSize: 12, marginLeft: 'auto' }}
-            href="https://github.com/kabirvashisht4-glitch/Widgeto"
-          >
-            source →
-          </a>
+          <div style={{ marginLeft: 'auto', display: 'flex', gap: 18 }}>
+            <Link className="mono faint" style={{ fontSize: 12 }} href="/compare">
+              leaderboard →
+            </Link>
+            <a
+              className="mono faint"
+              style={{ fontSize: 12 }}
+              href="https://github.com/kabirvashisht4-glitch/Widgeto"
+            >
+              source →
+            </a>
+          </div>
         </div>
       </footer>
     </main>

@@ -4,8 +4,25 @@
     {
       "name": "widgeto-web",
       "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "dev", "--workspace", "@widgeto/web"],
+      "runtimeArgs": [
+        "run",
+        "dev",
+        "--workspace",
+        "@widgeto/web"
+      ],
       "port": 3210
+    },
+    {
+      "name": "widgeto-app",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": [
+        "-m",
+        "http.server",
+        "3211",
+        "--directory",
+        "apps/mobile/build/web"
+      ],
+      "port": 3211
     }
   ]
 }

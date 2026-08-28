@@ -75,9 +75,10 @@ class ContributionGrid extends StatelessWidget {
       // sqrt weighting so a 40-commit day does not erase two solved problems.
       final w = math.sqrt(count.toDouble());
       final c = platformColor(platform);
-      r += c.red * w;
-      g += c.green * w;
-      b += c.blue * w;
+      // Flutter's Color channels are 0-1 doubles; scale to 0-255 for the mix.
+      r += c.r * 255 * w;
+      g += c.g * 255 * w;
+      b += c.b * 255 * w;
       total += w;
     });
     if (total == 0) return _empty;

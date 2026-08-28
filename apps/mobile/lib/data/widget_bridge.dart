@@ -1,5 +1,8 @@
 import 'dart:convert';
+
+import 'package:flutter/foundation.dart';
 import 'package:home_widget/home_widget.dart';
+
 import 'models.dart';
 
 /// Pushes data across to the native home-screen widgets.
@@ -13,8 +16,22 @@ class WidgetBridge {
   static const iosWidgetName = 'WidgetoWidget';
   static const androidProvider = 'StreakWidgetReceiver';
 
+  /// True once the native side has accepted us. When it hasn't — an older OS,
+  /// a plugin that isn't registered, or a platform with no home screen at all
+  /// — the app still runs; it just can't push to a widget.
+  static bool available = false;
+
   static Future<void> init() async {
-    await HomeWidget.setAppGroupId(iosAppGroup);
+    try {
+      await HomeWidget.setAppGroupId(iosAppGroup);
+      available = true;
+    } catch (err) {
+      // Never fatal. The widget is the point of the app, but being unable to
+      // reach it is no reason to refuse to launch — the user would get a blank
+      // screen instead of an explanation.
+      available = false;
+      debugPrint('Widgeto: home-screen widget unavailable ($err)');
+    }
   }
 
   /// Encode the last [weeks] of the grid into a compact string the native
@@ -50,8 +67,19 @@ class WidgetBridge {
   }
 
   static Future<void> push(Activity activity) async {
+    if (!available) return;
     final s = activity.summary;
 
+    try {
+      await _write(activity, s);
+    } catch (err) {
+      // A failed push leaves the widget showing older data, which is strictly
+      // better than failing the refresh the user just asked for.
+      debugPrint('Widgeto: could not update the home-screen widget ($err)');
+    }
+  }
+
+  static Future<void> _write(Activity activity, StreakSummary s) async {
     await Future.wait([
       HomeWidget.saveWidgetData<int>('streak', s.currentStreak),
       HomeWidget.saveWidgetData<int>('longest', s.longestStreak),

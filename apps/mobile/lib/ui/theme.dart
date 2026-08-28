@@ -13,6 +13,7 @@ const kTextFaint = Color(0xFF5F6773);
 const kGitHub = Color(0xFF39D353);
 const kCodeforces = Color(0xFF4AA3E0);
 const kLeetCode = Color(0xFFFFA116);
+const kAtCoder = Color(0xFFB08D4F);
 const kFlameHot = Color(0xFFFFB43D);
 const kDanger = Color(0xFFFF5C5C);
 
@@ -20,6 +21,7 @@ Color platformColor(String platform) => switch (platform) {
       'github' => kGitHub,
       'codeforces' => kCodeforces,
       'leetcode' => kLeetCode,
+      'atcoder' => kAtCoder,
       _ => kTextFaint,
     };
 

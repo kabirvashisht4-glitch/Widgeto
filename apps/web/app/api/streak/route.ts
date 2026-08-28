@@ -73,7 +73,9 @@ export async function GET(req: NextRequest) {
   const key = `${timezone}|${days}|${PLATFORM_IDS.map((id) => handles[id] ?? '').join('|')}`;
   const cached = readCache(key);
   if (cached) {
-    return NextResponse.json(cached, { headers: { 'x-widgeto-cache': 'hit' } });
+    return NextResponse.json(cached, {
+      headers: { 'x-widgeto-cache': 'hit', 'Access-Control-Allow-Origin': '*' },
+    });
   }
 
   let activity: UnifiedActivity;
@@ -103,6 +105,10 @@ export async function GET(req: NextRequest) {
   return NextResponse.json(body, {
     headers: {
       'x-widgeto-cache': 'miss',
+      // Read-only public data keyed by public handles — there is nothing here
+      // to protect with an origin check, and opening it lets the Flutter web
+      // build (and anyone else) read it directly.
+      'Access-Control-Allow-Origin': '*',
       // Let the CDN and the widget reuse this too.
       'Cache-Control': 'public, max-age=300, stale-while-revalidate=1800',
     },
