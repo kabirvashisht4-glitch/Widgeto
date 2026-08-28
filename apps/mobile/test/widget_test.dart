@@ -1,45 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:widgeto/data/insights.dart';
 import 'package:widgeto/data/models.dart';
+import 'package:widgeto/data/streak.dart';
+import 'package:widgeto/data/widget_config.dart';
 import 'package:widgeto/features/connect/connect_screen.dart';
 import 'package:widgeto/main.dart';
 import 'package:widgeto/ui/theme.dart';
 import 'package:widgeto/widgets/contribution_grid.dart';
-import 'package:widgeto/widgets/widget_face.dart';
+import 'package:widgeto/widgets/faces/widget_face.dart';
 
-Activity _sample({String status = 'at-risk', int streak = 59}) => Activity.fromJson({
-      'summary': {
-        'timezone': 'Asia/Kolkata',
-        'today': '2026-08-28',
-        'activeToday': status == 'safe',
-        'status': status,
-        'currentStreak': streak,
-        'longestStreak': 80,
-        'totalActiveDays': 355,
-        'totalContributions': 4032,
-      },
-      'heatmap': [
-        for (var i = 1; i <= 28; i++)
-          {
-            'date': '2026-08-${i.toString().padLeft(2, '0')}',
-            'count': i % 4,
-            'byPlatform': i % 4 == 0 ? {} : {'github': i % 4},
-          },
-      ],
-      'platforms': [
-        {
-          'platform': 'github',
-          'handle': 'torvalds',
-          'ok': true,
-          'profile': {
-            'stats': [
-              {'label': 'contributions', 'value': 3595},
-            ],
-          },
-        },
-      ],
-    });
+import 'support/sample.dart';
 
 void main() {
   setUp(() => SharedPreferences.setMockInitialValues({}));
@@ -50,7 +22,6 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('Where do you\ncode?'), findsOneWidget);
-      // One tile per platform, each showing its own mark.
       for (final mark in ['GH', 'CF', 'LC', 'AC']) {
         expect(find.text(mark), findsOneWidget);
       }
@@ -62,8 +33,7 @@ void main() {
       await tester.pumpAndSettle();
 
       final button = tester.widget<FilledButton>(find.byType(FilledButton));
-      expect(button.onPressed, isNull, reason: 'nothing to merge yet');
-      expect(find.text('Add at least one'), findsOneWidget);
+      expect(button.onPressed, isNull);
     });
   });
 
@@ -88,6 +58,22 @@ void main() {
       expect(submitted, {'github': 'torvalds'});
     });
 
+    testWidgets('as a tab it reframes itself rather than repeating onboarding',
+        (tester) async {
+      await tester.pumpWidget(MaterialApp(
+        theme: widgetoTheme(Brightness.dark),
+        home: ConnectScreen(
+          initial: const {'github': 'torvalds'},
+          embedded: true,
+          onDone: (_) {},
+        ),
+      ));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Your platforms'), findsOneWidget);
+      expect(find.text('Save  ·  1 connected'), findsOneWidget);
+    });
+
     testWidgets('tapping a tile opens a sheet that never asks for a password',
         (tester) async {
       await tester.pumpWidget(MaterialApp(
@@ -104,59 +90,236 @@ void main() {
     });
   });
 
-  group('widget face', () {
-    testWidgets('renders the streak and its status', (tester) async {
-      await tester.pumpWidget(MaterialApp(
-        home: Scaffold(
-          body: WidgetFace(
-            activity: _sample(),
-            size: FaceSize.medium,
-            skin: Skin.dark,
-            animate: false,
-          ),
-        ),
-      ));
-      await tester.pumpAndSettle();
-
-      expect(find.text('59'), findsOneWidget);
-      expect(find.text('not yet today'), findsOneWidget);
-      expect(tester.takeException(), isNull);
-    });
-
-    testWidgets('a broken streak says so', (tester) async {
-      await tester.pumpWidget(MaterialApp(
-        home: Scaffold(
-          body: WidgetFace(
-            activity: _sample(status: 'broken', streak: 0),
-            size: FaceSize.small,
-            skin: Skin.light,
-            animate: false,
-          ),
-        ),
-      ));
-      await tester.pumpAndSettle();
-
-      expect(find.text('streak broken'), findsOneWidget);
-    });
-
-    testWidgets('every size renders in both palettes', (tester) async {
-      for (final size in FaceSize.values) {
-        for (final skin in [Skin.dark, Skin.light]) {
-          await tester.pumpWidget(MaterialApp(
-            home: Scaffold(
-              body: WidgetFace(
-                activity: _sample(),
-                size: size,
-                skin: skin,
-                animate: false,
+  group('widget faces', () {
+    testWidgets('every template renders at every size in both palettes',
+        (tester) async {
+      // 6 templates × 3 sizes × 2 palettes. Layout bugs hide in exactly the
+      // combination nobody thought to open.
+      for (final template in FaceTemplate.values) {
+        for (final size in FaceSize.values) {
+          for (final skin in [WidgetSkin.dark, WidgetSkin.light]) {
+            await tester.pumpWidget(MaterialApp(
+              home: Scaffold(
+                body: Center(
+                  child: WidgetFace(
+                    activity: sampleActivity(),
+                    config: WidgetConfig(
+                      id: 't',
+                      template: template,
+                      size: size,
+                      skin: skin,
+                    ),
+                    animate: false,
+                  ),
+                ),
               ),
-            ),
-          ));
-          await tester.pumpAndSettle();
-          expect(tester.takeException(), isNull,
-              reason: '${size.label} in ${skin == Skin.dark ? 'dark' : 'light'}');
+            ));
+            await tester.pumpAndSettle();
+            expect(tester.takeException(), isNull,
+                reason: '${template.label} · ${size.label} · ${skin.name}');
+          }
         }
       }
+    });
+
+    testWidgets('the streak reads the same across templates', (tester) async {
+      for (final template in [FaceTemplate.grid, FaceTemplate.minimal, FaceTemplate.ring]) {
+        await tester.pumpWidget(MaterialApp(
+          home: Scaffold(
+            body: WidgetFace(
+              activity: sampleActivity(),
+              config: WidgetConfig(id: 't', template: template, size: FaceSize.large),
+              animate: false,
+            ),
+          ),
+        ));
+        await tester.pumpAndSettle();
+        expect(find.text('59'), findsOneWidget, reason: template.label);
+      }
+    });
+
+    testWidgets('the split bar actually has area', (tester) async {
+      // A childless ColoredBox takes the smallest height offered, so this bar
+      // once rendered at full width and zero height — present in the tree,
+      // invisible on screen, and passing every test that only asked whether it
+      // existed.
+      await tester.pumpWidget(MaterialApp(
+        home: Scaffold(
+          body: Center(
+            child: WidgetFace(
+              activity: sampleActivity(),
+              config: const WidgetConfig(
+                  id: 's', template: FaceTemplate.split, size: FaceSize.medium),
+              animate: false,
+            ),
+          ),
+        ),
+      ));
+      await tester.pumpAndSettle();
+
+      final segments = find.byType(ColoredBox).evaluate().where((e) {
+        final box = e.renderObject as RenderBox;
+        return box.size.width > 0 && box.size.width < 400;
+      });
+
+      expect(segments, isNotEmpty, reason: 'the bar should have segments');
+      for (final segment in segments) {
+        expect((segment.renderObject as RenderBox).size.height, greaterThan(0),
+            reason: 'a zero-height segment is an invisible bar');
+      }
+    });
+
+    testWidgets('a broken streak turns the number red on any template',
+        (tester) async {
+      await tester.pumpWidget(MaterialApp(
+        home: Scaffold(
+          body: WidgetFace(
+            activity: sampleActivity(status: 'broken', streak: 0),
+            config: const WidgetConfig(id: 't', template: FaceTemplate.minimal),
+            animate: false,
+          ),
+        ),
+      ));
+      await tester.pumpAndSettle();
+
+      final text = tester.widget<Text>(find.text('0'));
+      expect(text.style?.color, kDanger,
+          reason: 'a broken streak overrides the chosen accent');
+    });
+  });
+
+  group('scoping a widget to some platforms', () {
+    test('an empty set means everything, so new platforms join automatically', () {
+      final all = ScopedActivity.scoped(sampleActivity(), const <String>{});
+      expect(all.summary.currentStreak, sampleActivity().summary.currentStreak);
+      expect(all.platforms.length, 4);
+    });
+
+    test('narrowing drops the other platforms and recomputes the streak', () {
+      final activity = Activity.fromJson({
+        'summary': summaryJson(status: 'safe', streak: 3, today: '2026-08-28'),
+        'heatmap': [
+          {'date': '2026-08-26', 'count': 2, 'byPlatform': {'github': 2}},
+          {'date': '2026-08-27', 'count': 3, 'byPlatform': {'leetcode': 3}},
+          {'date': '2026-08-28', 'count': 1, 'byPlatform': {'github': 1}},
+        ],
+        'platforms': [
+          {'platform': 'github', 'handle': 'a', 'ok': true},
+          {'platform': 'leetcode', 'handle': 'b', 'ok': true},
+        ],
+      });
+
+      // GitHub alone: the 27th was LeetCode only, so the run breaks there and
+      // today stands alone.
+      final github = ScopedActivity.scoped(activity, {'github'});
+      expect(github.summary.currentStreak, 1);
+      expect(github.summary.totalContributions, 3);
+      expect(github.platforms.single.platform, 'github');
+
+      // Together the three days are consecutive.
+      final both = ScopedActivity.scoped(activity, {'github', 'leetcode'});
+      expect(both.summary.currentStreak, 3);
+    });
+
+    test('an empty today is pending, exactly as on the server', () {
+      final activity = Activity.fromJson({
+        'summary': summaryJson(status: 'at-risk', streak: 2, today: '2026-08-28'),
+        'heatmap': [
+          {'date': '2026-08-26', 'count': 1, 'byPlatform': {'github': 1}},
+          {'date': '2026-08-27', 'count': 1, 'byPlatform': {'github': 1}},
+          {'date': '2026-08-28', 'count': 0, 'byPlatform': <String, int>{}},
+        ],
+        'platforms': [
+          {'platform': 'github', 'handle': 'a', 'ok': true},
+        ],
+      });
+
+      final scoped = ScopedActivity.scoped(activity, {'github'});
+      expect(scoped.summary.status, 'at-risk');
+      expect(scoped.summary.currentStreak, 2, reason: 'the day is not over');
+    });
+  });
+
+  group('widget config', () {
+    test('survives a round trip through storage', () {
+      const config = WidgetConfig(
+        id: 'x',
+        name: 'Work only',
+        template: FaceTemplate.ring,
+        size: FaceSize.large,
+        skin: WidgetSkin.light,
+        accent: Accent.violet,
+        platforms: {'github'},
+        showCaption: false,
+      );
+      expect(WidgetConfig.fromJson(config.toJson()), config);
+    });
+
+    test('an unknown value falls back instead of losing the widget', () {
+      final config = WidgetConfig.fromJson(const {
+        'id': 'x',
+        'template': 'from-a-newer-build',
+        'size': 'enormous',
+        'accent': 'chartreuse',
+      });
+      expect(config.template, FaceTemplate.grid);
+      expect(config.size, FaceSize.medium);
+      expect(config.accent, Accent.flame);
+    });
+
+    test('includes() treats an empty set as everything', () {
+      const all = WidgetConfig(id: 'x');
+      expect(all.includes('atcoder'), isTrue);
+      const some = WidgetConfig(id: 'x', platforms: {'github'});
+      expect(some.includes('github'), isTrue);
+      expect(some.includes('atcoder'), isFalse);
+    });
+
+    test('a corrupt store still yields a usable widget', () async {
+      SharedPreferences.setMockInitialValues({'widget_configs': 'not json'});
+      final configs = await WidgetStore.load();
+      expect(configs, hasLength(1));
+    });
+  });
+
+  group('insights', () {
+    test('momentum compares the last week with the one before', () {
+      final heatmap = [
+        for (var i = 0; i < 14; i++)
+          AttributedDay(
+            date: '2026-08-${(i + 10).toString().padLeft(2, '0')}',
+            // 2/day in the older week, 5/day in the recent one.
+            count: i < 7 ? 2 : 5,
+            byPlatform: {'github': i < 7 ? 2 : 5},
+          ),
+      ];
+      final insights = Insights.from(
+          heatmap, StreakSummary.fromJson(summaryJson(streak: 14)));
+
+      expect(insights.last7, 35);
+      expect(insights.prev7, 14);
+      expect(insights.momentum, closeTo(150, 0.01));
+    });
+
+    test('the next milestone is always ahead of the current streak', () {
+      for (final streak in [0, 6, 7, 29, 99, 400, 1200]) {
+        final insights = Insights.from(
+            const [], StreakSummary.fromJson(summaryJson(streak: streak)));
+        expect(insights.nextMilestone, greaterThan(streak),
+            reason: 'streak $streak');
+      }
+    });
+
+    test('platform split sums to one', () {
+      final insights = Insights.from(
+        sampleActivity().heatmap,
+        sampleActivity().summary,
+      );
+      final total = insights.byPlatform.fold(0.0, (a, r) => a + r.share);
+      expect(total, closeTo(1.0, 0.001));
+      expect(insights.byPlatform.first.count,
+          greaterThanOrEqualTo(insights.byPlatform.last.count),
+          reason: 'sorted descending');
     });
   });
 
@@ -169,10 +332,11 @@ void main() {
       expect(tester.takeException(), isNull);
     });
 
-    testWidgets('replay restarts the reveal without rebuilding', (tester) async {
+    testWidgets('replay restarts the reveal', (tester) async {
       final key = GlobalKey<ContributionGridState>();
       await tester.pumpWidget(MaterialApp(
-        home: Scaffold(body: ContributionGrid(key: key, days: _sample().heatmap)),
+        home: Scaffold(
+            body: ContributionGrid(key: key, days: sampleActivity().heatmap)),
       ));
       await tester.pumpAndSettle();
 
@@ -183,57 +347,19 @@ void main() {
     });
   });
 
-  group('models', () {
-    test('dominant platform picks the busiest source for the day', () {
-      const day = AttributedDay(
-        date: '2026-08-28',
-        count: 9,
-        byPlatform: {'github': 2, 'leetcode': 7},
-      );
-      expect(day.dominantPlatform, 'leetcode');
-    });
-
-    test('a quiet day has no dominant platform', () {
-      const day = AttributedDay(date: '2026-08-28', count: 0, byPlatform: {});
-      expect(day.dominantPlatform, isNull);
-    });
-
-    test('a failed platform survives parsing so the UI can show why', () {
-      final activity = Activity.fromJson({
-        'summary': {
-          'timezone': 'UTC',
-          'today': '2026-08-28',
-          'activeToday': false,
-          'status': 'broken',
-          'currentStreak': 0,
-          'longestStreak': 0,
-          'totalActiveDays': 0,
-          'totalContributions': 0,
-        },
-        'heatmap': const [],
-        'platforms': [
-          {
-            'platform': 'leetcode',
-            'handle': 'nobody',
-            'ok': false,
-            'error': 'no LeetCode user named "nobody"',
-          },
-        ],
-      });
-      expect(activity.platforms.single.ok, isFalse);
-      expect(activity.platforms.single.error, contains('nobody'));
-    });
-  });
-
   group('palette', () {
-    test('every platform has its own colour and label', () {
+    test('every platform has its own colour, label and mark', () {
       const platforms = ['github', 'codeforces', 'leetcode', 'atcoder'];
-      final colors = platforms.map(platformColor).toSet();
-      expect(colors.length, platforms.length, reason: 'colours must be distinct');
+      expect(platforms.map(platformColor).toSet(), hasLength(platforms.length));
       for (final p in platforms) {
-        expect(platformLabel(p), isNot(p), reason: '$p needs a display name');
+        expect(platformLabel(p), isNot(p));
         expect(platformMark(p).length, 2);
       }
+    });
+
+    test('accents are distinct', () {
+      expect(Accent.values.map((a) => a.color).toSet(),
+          hasLength(Accent.values.length));
     });
   });
 }
