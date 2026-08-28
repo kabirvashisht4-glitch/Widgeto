@@ -66,6 +66,27 @@ class WidgetBridge {
     return buffer.toString();
   }
 
+  /// Ask the launcher to place the widget for us.
+  ///
+  /// Android supports this from API 26 on most launchers; iOS has no
+  /// equivalent and never will, since only the user may place a widget.
+  /// Returns false when the platform declines, so the caller can explain the
+  /// manual route instead of appearing to do nothing.
+  static Future<bool> requestPin() async {
+    if (!available) return false;
+    try {
+      await HomeWidget.requestPinWidget(
+        name: androidProvider,
+        androidName: androidProvider,
+        qualifiedAndroidName: 'me.widgeto.widget.$androidProvider',
+      );
+      return true;
+    } catch (err) {
+      debugPrint('Widgeto: launcher declined to pin the widget ($err)');
+      return false;
+    }
+  }
+
   static Future<void> push(Activity activity) async {
     if (!available) return;
     final s = activity.summary;

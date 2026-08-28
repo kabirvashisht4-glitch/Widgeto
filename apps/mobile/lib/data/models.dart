@@ -5,6 +5,10 @@
 /// new connector never requires shipping an app update.
 library;
 
+/// Numbers can arrive as int or double depending on the encoder; neither
+/// should be able to crash a widget over a rounding detail.
+int _int(Object? v) => v is num ? v.round() : 0;
+
 class StreakSummary {
   final String timezone;
   final String today;
@@ -29,12 +33,12 @@ class StreakSummary {
   factory StreakSummary.fromJson(Map<String, dynamic> json) => StreakSummary(
         timezone: json['timezone'] as String? ?? 'UTC',
         today: json['today'] as String? ?? '',
-        activeToday: json['activeToday'] as bool? ?? false,
+        activeToday: json['activeToday'] == true,
         status: json['status'] as String? ?? 'broken',
-        currentStreak: json['currentStreak'] as int? ?? 0,
-        longestStreak: json['longestStreak'] as int? ?? 0,
-        totalActiveDays: json['totalActiveDays'] as int? ?? 0,
-        totalContributions: json['totalContributions'] as int? ?? 0,
+        currentStreak: _int(json['currentStreak']),
+        longestStreak: _int(json['longestStreak']),
+        totalActiveDays: _int(json['totalActiveDays']),
+        totalContributions: _int(json['totalContributions']),
       );
 }
 
@@ -47,9 +51,12 @@ class AttributedDay {
 
   factory AttributedDay.fromJson(Map<String, dynamic> json) => AttributedDay(
         date: json['date'] as String,
-        count: json['count'] as int? ?? 0,
-        byPlatform: (json['byPlatform'] as Map<String, dynamic>? ?? {})
-            .map((k, v) => MapEntry(k, v as int)),
+        count: _int(json['count']),
+        // Map.from rather than a cast: a nested map arriving from jsonDecode is
+        // Map<String, dynamic>, but the same literal written in Dart is
+        // Map<dynamic, dynamic>, and a hard cast throws on the second.
+        byPlatform: Map<String, dynamic>.from(json['byPlatform'] as Map? ?? {})
+            .map((k, v) => MapEntry(k, _int(v))),
       );
 
   /// Which platform contributed most on this day — drives the square's colour.
@@ -79,16 +86,16 @@ class PlatformResult {
   });
 
   factory PlatformResult.fromJson(Map<String, dynamic> json) {
-    final profile = json['profile'] as Map<String, dynamic>?;
-    final rawStats = (profile?['stats'] as List<dynamic>? ?? []);
+    final profile = json['profile'] as Map?;
+    final rawStats = (profile?['stats'] as List? ?? const []);
     return PlatformResult(
       platform: json['platform'] as String,
       handle: json['handle'] as String,
-      ok: json['ok'] as bool? ?? false,
+      ok: json['ok'] == true,
       error: json['error'] as String?,
       stats: rawStats
           .map((s) => (
-                label: s['label'] as String,
+                label: '${(s as Map)['label']}',
                 value: '${s['value']}',
               ))
           .toList(),
@@ -104,12 +111,13 @@ class Activity {
   const Activity({required this.summary, required this.heatmap, required this.platforms});
 
   factory Activity.fromJson(Map<String, dynamic> json) => Activity(
-        summary: StreakSummary.fromJson(json['summary'] as Map<String, dynamic>),
-        heatmap: (json['heatmap'] as List<dynamic>)
-            .map((d) => AttributedDay.fromJson(d as Map<String, dynamic>))
+        summary: StreakSummary.fromJson(
+            Map<String, dynamic>.from(json['summary'] as Map)),
+        heatmap: (json['heatmap'] as List? ?? const [])
+            .map((d) => AttributedDay.fromJson(Map<String, dynamic>.from(d as Map)))
             .toList(),
-        platforms: (json['platforms'] as List<dynamic>)
-            .map((p) => PlatformResult.fromJson(p as Map<String, dynamic>))
+        platforms: (json['platforms'] as List? ?? const [])
+            .map((p) => PlatformResult.fromJson(Map<String, dynamic>.from(p as Map)))
             .toList(),
       );
 }
