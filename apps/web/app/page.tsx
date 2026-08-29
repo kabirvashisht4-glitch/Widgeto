@@ -113,7 +113,7 @@ export default function Home() {
       <section className="wrap" style={{ padding: '48px 24px' }}>
         <div className="eyebrow">connected</div>
         <h2 className="display" style={{ fontSize: 'clamp(30px, 4vw, 42px)', marginTop: 12 }}>
-          Three now. More landing.
+          {PLATFORMS.length} now. More landing.
         </h2>
 
         <div style={{ display: 'grid', gap: 12, marginTop: 26 }}>
