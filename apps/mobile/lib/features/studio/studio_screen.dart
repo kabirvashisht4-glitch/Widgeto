@@ -60,7 +60,8 @@ class _StudioScreenState extends State<StudioScreen> {
       appBar: AppBar(
         backgroundColor: skin.ground,
         elevation: 0,
-        title: Text(widget.config.name == 'New widget' ? 'New widget' : 'Edit widget',
+        title: Text(
+            widget.config.name == 'New widget' ? 'New widget' : 'Edit widget',
             style: Theme.of(context).textTheme.titleMedium),
         actions: [
           if (widget.onDelete != null)
@@ -247,8 +248,8 @@ class _StudioScreenState extends State<StudioScreen> {
           TextField(
             controller: _nameController,
             decoration: const InputDecoration(hintText: 'My widget'),
-            onChanged: (v) =>
-                _update(_draft.copyWith(name: v.trim().isEmpty ? 'My widget' : v.trim())),
+            onChanged: (v) => _update(_draft.copyWith(
+                name: v.trim().isEmpty ? 'My widget' : v.trim())),
           ),
         ],
       ),
@@ -257,7 +258,10 @@ class _StudioScreenState extends State<StudioScreen> {
 
   Widget _label(String text, Skin skin) => Text(text,
       style: TextStyle(
-          color: skin.faint, fontSize: 10.5, letterSpacing: 1.8, fontWeight: FontWeight.w500));
+          color: skin.faint,
+          fontSize: 10.5,
+          letterSpacing: 1.8,
+          fontWeight: FontWeight.w500));
 }
 
 /// Layout choices shown as cards, since the difference between them is visual
@@ -294,38 +298,49 @@ class _TemplatePicker extends StatelessWidget {
         childAspectRatio: 0.98,
         children: [
           for (final template in FaceTemplate.values)
-            GestureDetector(
-              onTap: () => onChanged(template),
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 180),
-                padding: const EdgeInsets.all(11),
-                decoration: BoxDecoration(
-                  color: template == value
-                      ? Color.alphaBlend(accent.withValues(alpha: 0.12), skin.surface)
-                      : skin.surface,
-                  borderRadius: BorderRadius.circular(15),
-                  border: Border.all(
+            Semantics(
+              button: true,
+              selected: template == value,
+              // The blurb is the only place the difference between layouts is
+              // explained; a screen reader should hear it, not just the name.
+              label: '${template.label} layout. ${template.blurb}',
+              // Without this the card announces its label and then its visible
+              // text — "Grid layout… Grid".
+              excludeSemantics: true,
+              child: GestureDetector(
+                onTap: () => onChanged(template),
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 180),
+                  padding: const EdgeInsets.all(11),
+                  decoration: BoxDecoration(
                     color: template == value
-                        ? accent.withValues(alpha: 0.65)
-                        : skin.line,
-                    width: template == value ? 1.5 : 1,
+                        ? Color.alphaBlend(
+                            accent.withValues(alpha: 0.12), skin.surface)
+                        : skin.surface,
+                    borderRadius: BorderRadius.circular(15),
+                    border: Border.all(
+                      color: template == value
+                          ? accent.withValues(alpha: 0.65)
+                          : skin.line,
+                      width: template == value ? 1.5 : 1,
+                    ),
                   ),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Icon(_icons[template],
-                        size: 20,
-                        color: template == value ? accent : skin.faint),
-                    const Spacer(),
-                    Text(template.label,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                            color: skin.text,
-                            fontSize: 13,
-                            fontWeight: FontWeight.w600)),
-                  ],
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Icon(_icons[template],
+                          size: 20,
+                          color: template == value ? accent : skin.faint),
+                      const Spacer(),
+                      Text(template.label,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                              color: skin.text,
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600)),
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -390,33 +405,39 @@ class _SourceChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tint = platformColor(platform);
-    return GestureDetector(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 160),
-        padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 9),
-        decoration: BoxDecoration(
-          color: selected
-              ? Color.alphaBlend(tint.withValues(alpha: 0.14), skin.surface)
-              : skin.surface,
-          borderRadius: BorderRadius.circular(11),
-          border: Border.all(
-              color: selected ? tint.withValues(alpha: 0.6) : skin.line),
-        ),
-        child: Row(mainAxisSize: MainAxisSize.min, children: [
-          Container(
-            width: 7,
-            height: 7,
-            decoration: BoxDecoration(
-              color: selected ? tint : skin.faint,
-              borderRadius: BorderRadius.circular(2),
-            ),
+    return Semantics(
+      button: true,
+      selected: selected,
+      label: '${platformLabel(platform)} as a source',
+      excludeSemantics: true,
+      child: GestureDetector(
+        onTap: onTap,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 160),
+          padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 9),
+          decoration: BoxDecoration(
+            color: selected
+                ? Color.alphaBlend(tint.withValues(alpha: 0.14), skin.surface)
+                : skin.surface,
+            borderRadius: BorderRadius.circular(11),
+            border: Border.all(
+                color: selected ? tint.withValues(alpha: 0.6) : skin.line),
           ),
-          const SizedBox(width: 8),
-          Text(platformLabel(platform),
-              style: TextStyle(
-                  color: selected ? skin.text : skin.dim, fontSize: 13)),
-        ]),
+          child: Row(mainAxisSize: MainAxisSize.min, children: [
+            Container(
+              width: 7,
+              height: 7,
+              decoration: BoxDecoration(
+                color: selected ? tint : skin.faint,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(width: 8),
+            Text(platformLabel(platform),
+                style: TextStyle(
+                    color: selected ? skin.text : skin.dim, fontSize: 13)),
+          ]),
+        ),
       ),
     );
   }
@@ -449,25 +470,32 @@ class _Segmented<T> extends StatelessWidget {
           children: options.map((option) {
             final selected = option == value;
             return Expanded(
-              child: GestureDetector(
-                onTap: () => onChanged(option),
-                behavior: HitTestBehavior.opaque,
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 180),
-                  height: 38,
-                  alignment: Alignment.center,
-                  decoration: BoxDecoration(
-                    color: selected ? skin.surface : Colors.transparent,
-                    borderRadius: BorderRadius.circular(11),
-                    border: Border.all(
-                        color: selected ? skin.line : Colors.transparent),
+              child: Semantics(
+                button: true,
+                inMutuallyExclusiveGroup: true,
+                selected: selected,
+                // No label: the visible word already names it, and supplying
+                // one here would have it announced twice.
+                child: GestureDetector(
+                  onTap: () => onChanged(option),
+                  behavior: HitTestBehavior.opaque,
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 180),
+                    height: 38,
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      color: selected ? skin.surface : Colors.transparent,
+                      borderRadius: BorderRadius.circular(11),
+                      border: Border.all(
+                          color: selected ? skin.line : Colors.transparent),
+                    ),
+                    child: Text(labelOf(option),
+                        style: TextStyle(
+                            fontSize: 13.5,
+                            fontWeight:
+                                selected ? FontWeight.w600 : FontWeight.w400,
+                            color: selected ? skin.text : skin.dim)),
                   ),
-                  child: Text(labelOf(option),
-                      style: TextStyle(
-                          fontSize: 13.5,
-                          fontWeight:
-                              selected ? FontWeight.w600 : FontWeight.w400,
-                          color: selected ? skin.text : skin.dim)),
                 ),
               ),
             );
