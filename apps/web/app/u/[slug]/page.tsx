@@ -31,9 +31,24 @@ export async function generateMetadata({ params }: Pick<Params, 'params'>): Prom
   const { slug } = await params;
   const handles = decodeSlug(slug);
   const who = describeHandles(handles);
+  const description = `The merged coding streak of ${who}, across every platform they code on.`;
+
+  // The card image itself comes from opengraph-image.tsx alongside this file;
+  // Next wires it up, so declaring `images` here would only fight it.
   return {
-    title: `${who} — Widgeto`,
-    description: `The merged coding streak of ${who}, across every platform they code on.`,
+    title: who,
+    description,
+    openGraph: {
+      type: 'profile',
+      title: `${who} · Widgeto`,
+      description,
+      url: `/u/${slug}`,
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: `${who} · Widgeto`,
+      description,
+    },
   };
 }
 
