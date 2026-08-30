@@ -173,6 +173,9 @@ void main() {
                       config: WidgetConfig(
                           id: 'g', template: template, size: size),
                       animate: false,
+                      // Pinned so the Flame layout's "how much of today is
+                      // gone" bar renders identically on every run.
+                      now: DateTime(2026, 8, 28, 14, 30),
                     ),
                   ),
               ],
@@ -213,6 +216,7 @@ void main() {
                       accent: Accent.ember,
                     ),
                     animate: false,
+                    now: DateTime(2026, 8, 28, 14, 30),
                   ),
                 ),
             ],

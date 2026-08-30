@@ -21,12 +21,18 @@ class WidgetFace extends StatelessWidget {
     required this.config,
     this.gridKey,
     this.animate = true,
+    this.now,
   });
 
   final Activity activity;
   final WidgetConfig config;
   final Key? gridKey;
   final bool animate;
+
+  /// Overridable clock. The Flame layout draws how much of *today* is gone, so
+  /// without an injectable now its golden drifts every hour and the test fails
+  /// forever for reasons that have nothing to do with the code.
+  final DateTime? now;
 
   @override
   Widget build(BuildContext context) {
@@ -59,6 +65,7 @@ class WidgetFace extends StatelessWidget {
         skin: skin,
         gridKey: gridKey,
         animate: animate,
+        now: now ?? DateTime.now(),
       ),
     );
   }
@@ -71,6 +78,7 @@ class _FaceBody extends StatelessWidget {
     required this.skin,
     required this.gridKey,
     required this.animate,
+    required this.now,
   });
 
   final ScopedActivity scoped;
@@ -78,6 +86,7 @@ class _FaceBody extends StatelessWidget {
   final Skin skin;
   final Key? gridKey;
   final bool animate;
+  final DateTime now;
 
   StreakSummary get s => scoped.summary;
   Color get accent => s.status == 'broken' ? kDanger : config.accent.color;
@@ -147,7 +156,6 @@ class _FaceBody extends StatelessWidget {
   /// Urgency, made visual. The bar is how much of today is gone — the one
   /// thing that actually decides whether the streak survives.
   Widget _flame() {
-    final now = DateTime.now();
     final dayGone = (now.hour * 60 + now.minute) / (24 * 60);
 
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [

@@ -138,6 +138,34 @@ void main() {
       }
     });
 
+    testWidgets('the Flame bar tracks the injected clock, not the wall clock',
+        (tester) async {
+      Future<double> barAt(DateTime when) async {
+        await tester.pumpWidget(MaterialApp(
+          home: Scaffold(
+            body: Center(
+              child: WidgetFace(
+                activity: sampleActivity(),
+                config: const WidgetConfig(
+                    id: 'f', template: FaceTemplate.flame, size: FaceSize.medium),
+                animate: false,
+                now: when,
+              ),
+            ),
+          ),
+        ));
+        await tester.pumpAndSettle();
+        return tester
+            .widget<LinearProgressIndicator>(find.byType(LinearProgressIndicator))
+            .value!;
+      }
+
+      // A golden that reads the real clock drifts every hour and fails for
+      // reasons unrelated to the code.
+      expect(await barAt(DateTime(2026, 8, 28, 6, 0)), closeTo(0.25, 0.01));
+      expect(await barAt(DateTime(2026, 8, 28, 18, 0)), closeTo(0.75, 0.01));
+    });
+
     testWidgets('the split bar actually has area', (tester) async {
       // A childless ColoredBox takes the smallest height offered, so this bar
       // once rendered at full width and zero height — present in the tree,
