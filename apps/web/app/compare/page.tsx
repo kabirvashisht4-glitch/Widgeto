@@ -2,9 +2,16 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import Leaderboard from '../components/Leaderboard';
 
+const description = 'Put your merged streak up against your friends.';
+
 export const metadata: Metadata = {
-  title: 'Leaderboard — Widgeto',
-  description: 'Put your merged streak up against your friends.',
+  title: 'Leaderboard',
+  description,
+  openGraph: {
+    title: 'Leaderboard · Widgeto',
+    description,
+    url: '/compare',
+  },
 };
 
 export default function ComparePage() {
