@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/semantics.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:widgeto/data/insights.dart';
@@ -6,6 +7,8 @@ import 'package:widgeto/data/models.dart';
 import 'package:widgeto/data/streak.dart';
 import 'package:widgeto/data/widget_config.dart';
 import 'package:widgeto/features/connect/connect_screen.dart';
+import 'package:widgeto/features/gallery/gallery_screen.dart';
+import 'package:widgeto/features/studio/studio_screen.dart';
 import 'package:widgeto/main.dart';
 import 'package:widgeto/ui/theme.dart';
 import 'package:widgeto/widgets/contribution_grid.dart';
@@ -375,6 +378,93 @@ void main() {
     });
   });
 
+  group('accessibility', () {
+    testWidgets("the builder's controls are operable by a screen reader",
+        (tester) async {
+      final handle = tester.ensureSemantics();
+      // The studio is a ListView; on the default 600px surface the size,
+      // palette and source controls are never built, so they cannot be found.
+      tester.view.physicalSize = const Size(1125, 3400);
+      tester.view.devicePixelRatio = 3;
+      addTearDown(tester.view.reset);
+
+      await tester.pumpWidget(MaterialApp(
+        theme: widgetoTheme(Brightness.dark),
+        home: StudioScreen(
+          config: const WidgetConfig(id: '1', template: FaceTemplate.grid),
+          activity: sampleActivity(),
+          connected: const ['github', 'codeforces'],
+          onSave: (_) {},
+          onDelete: null,
+        ),
+      ));
+      await tester.pumpAndSettle();
+
+      // Layout cards, size and palette segments and source chips are all
+      // GestureDetectors — without explicit semantics they are invisible to
+      // assistive tech, which is most of the editor being unusable.
+      expect(
+        find.bySemanticsLabel(RegExp('^Grid layout')),
+        findsOneWidget,
+        reason: 'each layout announces itself and what it shows',
+      );
+      // Segments carry no label of their own — the visible word names them,
+      // and a wrapper label would be announced twice.
+      expect(find.bySemanticsLabel('Medium'), findsOneWidget);
+      expect(find.bySemanticsLabel('Dark'), findsOneWidget);
+      expect(find.bySemanticsLabel('GitHub as a source'), findsOneWidget);
+
+      // Nothing should announce its own name twice.
+      for (final label in ['Grid layout. The contribution calendar, blended by platform',
+                           'GitHub as a source']) {
+        final node = tester.getSemantics(find.bySemanticsLabel(label));
+        expect(node.label, label, reason: 'label must not be doubled');
+      }
+
+      // The selected layout must report that it is selected, or a screen
+      // reader user cannot tell which one is active.
+      //
+      // hasFlag is deprecated in favour of the isSemantics matcher, but that
+      // matcher throws while building its own mismatch description, so it
+      // cannot report a failure. A deprecated call that works beats a
+      // replacement that cannot.
+      // ignore: deprecated_member_use
+      bool isSelectedNode(Finder f) => tester
+          .getSemantics(f)
+          // ignore: deprecated_member_use
+          .hasFlag(SemanticsFlag.isSelected);
+
+      expect(isSelectedNode(find.bySemanticsLabel(RegExp('^Grid layout'))), isTrue);
+      expect(isSelectedNode(find.bySemanticsLabel(RegExp('^Flame layout'))), isFalse);
+
+      handle.dispose();
+    });
+
+    testWidgets('gallery cards say which widget they open', (tester) async {
+      final handle = tester.ensureSemantics();
+
+      await tester.pumpWidget(MaterialApp(
+        theme: widgetoTheme(Brightness.dark),
+        home: Scaffold(
+          body: GalleryScreen(
+            configs: const [
+              WidgetConfig(
+                  id: '1', name: 'Work only', template: FaceTemplate.ring),
+            ],
+            activity: sampleActivity(),
+            onEdit: (_) {},
+            onCreate: () {},
+            onRefresh: _noRefresh,
+          ),
+        ),
+      ));
+      await tester.pumpAndSettle();
+
+      expect(find.bySemanticsLabel(RegExp('Edit Work only')), findsOneWidget);
+      handle.dispose();
+    });
+  });
+
   group('palette', () {
     test('every platform has its own colour, label and mark', () {
       const platforms = ['github', 'codeforces', 'leetcode', 'atcoder'];
@@ -391,3 +481,5 @@ void main() {
     });
   });
 }
+
+Future<void> _noRefresh() async {}

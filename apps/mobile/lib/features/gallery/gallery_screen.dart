@@ -81,11 +81,9 @@ class GalleryScreen extends StatelessWidget {
               ]),
             ),
           ]),
-
           const SizedBox(height: 30),
           Row(children: [
-            Text('YOUR WIDGETS',
-                style: Theme.of(context).textTheme.labelSmall),
+            Text('YOUR WIDGETS', style: Theme.of(context).textTheme.labelSmall),
             const Spacer(),
             TextButton.icon(
               onPressed: onCreate,
@@ -98,7 +96,6 @@ class GalleryScreen extends StatelessWidget {
             ),
           ]),
           const SizedBox(height: 8),
-
           for (final config in configs)
             Padding(
               padding: const EdgeInsets.only(bottom: 18),
@@ -109,7 +106,6 @@ class GalleryScreen extends StatelessWidget {
                 onEdit: () => onEdit(config),
               ),
             ),
-
           const SizedBox(height: 6),
           FilledButton.icon(
             onPressed: () async {
@@ -149,70 +145,77 @@ class _GalleryCard extends StatelessWidget {
   final VoidCallback onEdit;
 
   @override
-  Widget build(BuildContext context) => GestureDetector(
-        onTap: onEdit,
-        child: Container(
-          decoration: BoxDecoration(
-            color: skin.surfaceAlt,
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: skin.line),
-          ),
-          child: Column(children: [
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 22),
-              // The face is drawn at true size; a card narrower than a medium
-              // widget scrolls rather than squashing the preview into a lie.
-              child: SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                padding: const EdgeInsets.symmetric(horizontal: 18),
-                physics: const BouncingScrollPhysics(),
-                child: WidgetFace(
-                  activity: activity,
-                  config: config,
-                  animate: false,
-                ),
-              ),
+  Widget build(BuildContext context) => Semantics(
+        button: true,
+        label: 'Edit ${config.name}, '
+            '${config.template.label} layout, ${config.size.label}',
+        excludeSemantics: true,
+        child: GestureDetector(
+          onTap: onEdit,
+          child: Container(
+            decoration: BoxDecoration(
+              color: skin.surfaceAlt,
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: skin.line),
             ),
-            Container(
-              padding: const EdgeInsets.fromLTRB(16, 12, 12, 12),
-              decoration: BoxDecoration(
-                border: Border(top: BorderSide(color: skin.line)),
-              ),
-              child: Row(children: [
-                Container(
-                  width: 8,
-                  height: 8,
-                  decoration: BoxDecoration(
-                      color: config.accent.color,
-                      borderRadius: BorderRadius.circular(2)),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(config.name,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                              color: skin.text,
-                              fontSize: 14.5,
-                              fontWeight: FontWeight.w600)),
-                      const SizedBox(height: 2),
-                      Text(
-                        '${config.template.label} · ${config.size.label}'
-                        '${config.platforms.isEmpty ? '' : ' · ${config.platforms.length} sources'}',
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(color: skin.faint, fontSize: 12),
-                      ),
-                    ],
+            child: Column(children: [
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 22),
+                // The face is drawn at true size; a card narrower than a medium
+                // widget scrolls rather than squashing the preview into a lie.
+                child: SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  padding: const EdgeInsets.symmetric(horizontal: 18),
+                  physics: const BouncingScrollPhysics(),
+                  child: WidgetFace(
+                    activity: activity,
+                    config: config,
+                    animate: false,
                   ),
                 ),
-                Icon(Icons.chevron_right_rounded, color: skin.faint, size: 22),
-              ]),
-            ),
-          ]),
+              ),
+              Container(
+                padding: const EdgeInsets.fromLTRB(16, 12, 12, 12),
+                decoration: BoxDecoration(
+                  border: Border(top: BorderSide(color: skin.line)),
+                ),
+                child: Row(children: [
+                  Container(
+                    width: 8,
+                    height: 8,
+                    decoration: BoxDecoration(
+                        color: config.accent.color,
+                        borderRadius: BorderRadius.circular(2)),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(config.name,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                                color: skin.text,
+                                fontSize: 14.5,
+                                fontWeight: FontWeight.w600)),
+                        const SizedBox(height: 2),
+                        Text(
+                          '${config.template.label} · ${config.size.label}'
+                          '${config.platforms.isEmpty ? '' : ' · ${config.platforms.length} sources'}',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(color: skin.faint, fontSize: 12),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Icon(Icons.chevron_right_rounded,
+                      color: skin.faint, size: 22),
+                ]),
+              ),
+            ]),
+          ),
         ),
       );
 }
