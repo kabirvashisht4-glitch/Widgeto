@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from 'react';
 import type { AttributedDay, PlatformId } from '@widgeto/core';
+import { gridColors, usePrefersDark } from './useTheme';
 
 /**
  * The blended contribution grid — Widgeto's signature visual.
@@ -22,9 +23,6 @@ export const PLATFORM_COLORS: Record<PlatformId, string> = {
   atcoder: '#b08d4f',
 };
 
-const EMPTY = '#1a1e26';
-const BG = '#0c0e12';
-
 function hexToRgb(hex: string): [number, number, number] {
   const n = parseInt(hex.slice(1), 16);
   return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
@@ -34,7 +32,10 @@ const rgbToCss = ([r, g, b]: [number, number, number]) =>
   `rgb(${Math.round(r)}, ${Math.round(g)}, ${Math.round(b)})`;
 
 /** Weighted average of each contributing platform's colour. */
-function blend(byPlatform: Partial<Record<PlatformId, number>>): [number, number, number] {
+function blend(
+  byPlatform: Partial<Record<PlatformId, number>>,
+  empty: readonly [number, number, number],
+): [number, number, number] {
   let total = 0;
   let [r, g, b] = [0, 0, 0];
   for (const [id, count] of Object.entries(byPlatform) as [PlatformId, number][]) {
@@ -48,19 +49,26 @@ function blend(byPlatform: Partial<Record<PlatformId, number>>): [number, number
     b += pb * w;
     total += w;
   }
-  if (total === 0) return hexToRgb(EMPTY);
+  if (total === 0) return [...empty] as [number, number, number];
   return [r / total, g / total, b / total];
 }
 
-/** Mix a colour toward the background to express intensity. */
-function withIntensity(color: [number, number, number], ratio: number): string {
+/**
+ * Mix a colour toward the page's own ground to express intensity — which is
+ * why the ground is passed in rather than baked: on a light page the same
+ * square has to fade toward white, not toward black.
+ */
+function withIntensity(
+  color: [number, number, number],
+  ratio: number,
+  ground: readonly [number, number, number],
+): string {
   // Floor at 0.25 so a one-commit day is still visible, not a smudge.
   const t = 0.25 + 0.75 * Math.min(1, Math.sqrt(ratio));
-  const bg = hexToRgb(BG);
   return rgbToCss([
-    bg[0] + (color[0] - bg[0]) * t,
-    bg[1] + (color[1] - bg[1]) * t,
-    bg[2] + (color[2] - bg[2]) * t,
+    ground[0] + (color[0] - ground[0]) * t,
+    ground[1] + (color[1] - ground[1]) * t,
+    ground[2] + (color[2] - ground[2]) * t,
   ]);
 }
 
@@ -75,6 +83,8 @@ interface Props {
 
 export default function ContributionGrid({ days, cell = 11, gap = 3, animate = true }: Props) {
   const [hover, setHover] = useState<AttributedDay | null>(null);
+  const { empty, ground } = gridColors(usePrefersDark());
+  const emptyCss = rgbToCss([...empty]);
 
   const { columns, peak, monthLabels } = useMemo(() => {
     if (days.length === 0) return { columns: [], peak: 1, monthLabels: [] };
@@ -130,7 +140,9 @@ export default function ContributionGrid({ days, cell = 11, gap = 3, animate = t
             col.map((day, ri) => {
               if (!day) return null;
               const fill =
-                day.count > 0 ? withIntensity(blend(day.byPlatform), day.count / peak) : EMPTY;
+                day.count > 0
+                  ? withIntensity(blend(day.byPlatform, empty), day.count / peak, ground)
+                  : emptyCss;
               return (
                 <rect
                   key={day.date}
