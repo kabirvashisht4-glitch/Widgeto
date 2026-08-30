@@ -20,9 +20,9 @@ export default function ComparePage() {
       <nav className="wrap" style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '26px 24px' }}>
         <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none' }}>
           <svg width="22" height="22" viewBox="0 0 22 22" aria-hidden="true">
-            <rect x="1" y="12" width="8" height="8" rx="2" fill="#39d353" />
-            <rect x="12" y="12" width="8" height="8" rx="2" fill="#ffa116" />
-            <rect x="6.5" y="1.5" width="8" height="8" rx="2" fill="#4aa3e0" />
+            <rect x="1" y="12" width="8" height="8" fill="#39d353" />
+            <rect x="12" y="12" width="8" height="8" fill="#ffa116" />
+            <rect x="6.5" y="1.5" width="8" height="8" fill="#4aa3e0" />
           </svg>
           <span style={{ fontWeight: 600 }}>Widgeto</span>
         </Link>
