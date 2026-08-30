@@ -217,7 +217,7 @@ function Placeholder({ loading }: { loading: boolean }) {
                 width: 9,
                 height: 9,
                 borderRadius: 2,
-                background: '#1a1e26',
+                background: 'var(--grid-empty)',
                 animation: loading ? `pop 900ms ease ${(i % 26) * 24}ms infinite alternate` : undefined,
               }}
             />
