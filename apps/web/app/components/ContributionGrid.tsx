@@ -151,9 +151,9 @@ export default function ContributionGrid({ days, cell = 11, gap = 3, animate = t
                   y={ri * (cell + gap) + 18}
                   width={cell}
                   height={cell}
-                  rx={2.5}
+                  rx={0}
                   fill={fill}
-                  style={animate ? { animationDelay: `${Math.min(ci * 7, 900)}ms` } : undefined}
+                  style={animate ? { animationDelay: `${Math.min(ci * 5, 700)}ms` } : undefined}
                   onMouseEnter={() => setHover(day)}
                   onMouseLeave={() => setHover(null)}
                 >

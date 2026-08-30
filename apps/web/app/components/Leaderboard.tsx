@@ -193,7 +193,7 @@ export default function Leaderboard() {
                     width: 24,
                     flexShrink: 0,
                     fontWeight: i === 0 ? 700 : 400,
-                    color: i === 0 ? 'var(--flame-hot)' : 'var(--text-faint)',
+                    color: i === 0 ? 'var(--text)' : 'var(--text-faint)',
                   }}
                 >
                   {i + 1}
@@ -211,9 +211,9 @@ export default function Leaderboard() {
                       see rather than two numbers you have to subtract. */}
                   <div
                     style={{
-                      height: 5,
-                      borderRadius: 3,
+                      height: 8,
                       background: 'var(--surface-2)',
+                      border: '1px solid var(--line-soft)',
                       marginTop: 8,
                       overflow: 'hidden',
                     }}
@@ -222,7 +222,6 @@ export default function Leaderboard() {
                       style={{
                         width: `${Math.max(share * 100, 2)}%`,
                         height: '100%',
-                        borderRadius: 3,
                         background:
                           colors.length > 1
                             ? `linear-gradient(90deg, ${colors.join(', ')})`

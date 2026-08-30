@@ -11,8 +11,10 @@ import ContributionGrid from './ContributionGrid';
  */
 
 const STATUS_COPY = {
-  safe: { label: 'done today', color: 'var(--github)' },
-  'at-risk': { label: 'not yet today', color: 'var(--flame-hot)' },
+  safe: { label: 'done today', color: 'var(--ok)' },
+  // Pending is a neutral state, not a warning — it gets the page's own ink
+  // rather than a colour, so the two states that DO mean something stay loud.
+  'at-risk': { label: 'not yet today', color: 'var(--text-dim)' },
   broken: { label: 'streak broken', color: 'var(--danger)' },
 } as const;
 
@@ -30,7 +32,7 @@ export default function WidgetCard({
   const failed = platforms.filter((p) => !p.ok);
 
   return (
-    <div className="card" style={{ padding: 26, overflow: 'hidden' }}>
+    <div className="card" style={{ padding: 28, overflow: 'hidden' }}>
       <div
         style={{
           display: 'flex',
@@ -46,13 +48,11 @@ export default function WidgetCard({
             <span
               className="mono"
               style={{
-                fontSize: 76,
+                fontSize: 88,
                 fontWeight: 700,
-                lineHeight: 1,
-                letterSpacing: '-0.04em',
-                background: 'linear-gradient(160deg, var(--flame-hot), var(--flame))',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
+                lineHeight: 0.9,
+                letterSpacing: '-0.05em',
+                color: summary.status === 'broken' ? 'var(--danger)' : 'var(--text)',
               }}
             >
               {summary.currentStreak}
@@ -66,13 +66,7 @@ export default function WidgetCard({
             style={{ marginTop: 8, fontSize: 12, color: status.color, display: 'flex', gap: 7, alignItems: 'center' }}
           >
             <span
-              style={{
-                width: 7,
-                height: 7,
-                borderRadius: 99,
-                background: status.color,
-                boxShadow: `0 0 10px ${status.color}`,
-              }}
+              style={{ width: 8, height: 8, background: status.color }}
             />
             {status.label}
           </div>
@@ -98,7 +92,6 @@ export default function WidgetCard({
               style={{
                 width: 8,
                 height: 8,
-                borderRadius: 2,
                 background: PLATFORM_COLORS[p.platform],
                 flexShrink: 0,
               }}

@@ -22,14 +22,22 @@ import type { AttributedDay, HandleMap, PlatformId } from '@widgeto/core';
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
+/* The badge lands in READMEs on both light and dark GitHub, so it paints its
+   own dark ground and stays legible either way. Colours and geometry match the
+   site: hard corners, and hue reserved for platform identity. */
 const HUE: Record<PlatformId, [number, number, number]> = {
-  github: [57, 211, 83],
-  codeforces: [74, 163, 224],
-  leetcode: [255, 161, 22],
-  atcoder: [176, 141, 79],
+  github: [63, 185, 80],
+  codeforces: [88, 166, 255],
+  leetcode: [255, 166, 87],
+  atcoder: [208, 176, 112],
 };
-const EMPTY: [number, number, number] = [26, 30, 38];
-const GROUND: [number, number, number] = [11, 13, 17];
+const EMPTY: [number, number, number] = [28, 28, 31];
+const GROUND: [number, number, number] = [9, 9, 11];
+
+const INK = '#fafafa';
+const MUTED = '#8b8b95';
+const OK = '#3fb950';
+const BAD = '#ff7b72';
 
 const FONT =
   "-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif";
@@ -73,8 +81,8 @@ function errorBadge(message: string) {
   const w = 20 + message.length * 6.6;
   return svgResponse(
     `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="28" role="img" aria-label="${esc(message)}">
-  <rect width="${w}" height="28" rx="6" fill="#1a1e26"/>
-  <text x="10" y="18" font-family="${FONT}" font-size="12" fill="#ff5c5c">${esc(message)}</text>
+  <rect width="${w}" height="28" fill="#09090b" stroke="#3f3f46"/>
+  <text x="10" y="18.5" font-family="${MONO}" font-size="11" fill="${BAD}">${esc(message)}</text>
 </svg>`,
     60,
   );
@@ -111,19 +119,21 @@ export async function GET(req: NextRequest) {
   }
 
   const { summary } = activity;
-  const accent = summary.status === 'broken' ? '#ff5c5c' : '#ffb43d';
+  // The number is the page's ink, not a colour. Only a broken streak — which
+  // genuinely means something — takes a hue.
+  const accent = summary.status === 'broken' ? BAD : INK;
 
   if (style === 'flat') {
     const label = 'streak';
-    const value = `${summary.currentStreak} days`;
-    const lw = 16 + label.length * 6.6;
-    const vw = 18 + value.length * 6.9;
+    const value = `${summary.currentStreak}d`;
+    const lw = 20 + label.length * 7.4;
+    const vw = 22 + value.length * 7.4;
     return svgResponse(
       `<svg xmlns="http://www.w3.org/2000/svg" width="${lw + vw}" height="28" role="img" aria-label="${label} ${value}">
-  <rect width="${lw + vw}" height="28" rx="6" fill="#1a1e26"/>
-  <path d="M${lw} 0h${vw - 6}a6 6 0 0 1 6 6v16a6 6 0 0 1-6 6H${lw}z" fill="#14171d"/>
-  <text x="8" y="18.5" font-family="${FONT}" font-size="12" fill="#8c95a4">${label}</text>
-  <text x="${lw + 9}" y="18.5" font-family="${MONO}" font-size="12" font-weight="600" fill="${accent}">${esc(value)}</text>
+  <rect x="0.75" y="0.75" width="${lw + vw - 1.5}" height="26.5" fill="#09090b" stroke="#3f3f46" stroke-width="1.5"/>
+  <rect x="${lw}" y="0.75" width="1.5" height="26.5" fill="#3f3f46"/>
+  <text x="10" y="18.5" font-family="${MONO}" font-size="10.5" letter-spacing="1.4" fill="${MUTED}">${label.toUpperCase()}</text>
+  <text x="${lw + 11}" y="18.5" font-family="${MONO}" font-size="12" font-weight="700" fill="${accent}">${esc(value)}</text>
 </svg>`,
       300,
     );
@@ -144,7 +154,7 @@ export async function GET(req: NextRequest) {
   const squares = heatmap
     .map((day, i) => {
       const idx = i + pad;
-      return `<rect x="${(gridX + Math.floor(idx / 7) * STEP).toFixed(1)}" y="${(gridY + (idx % 7) * STEP).toFixed(1)}" width="${CELL}" height="${CELL}" rx="2" fill="${cellColor(day, peak)}"/>`;
+      return `<rect x="${(gridX + Math.floor(idx / 7) * STEP).toFixed(1)}" y="${(gridY + (idx % 7) * STEP).toFixed(1)}" width="${CELL}" height="${CELL}" fill="${cellColor(day, peak)}"/>`;
     })
     .join('');
 
@@ -152,7 +162,7 @@ export async function GET(req: NextRequest) {
   const legend = live
     .map((p, i) => {
       const x = 22 + i * 15;
-      return `<rect x="${x}" y="121" width="8" height="8" rx="2" fill="${rgb(HUE[p.platform])}"><title>${esc(p.handle)} on ${p.platform}</title></rect>`;
+      return `<rect x="${x}" y="121" width="9" height="9" fill="${rgb(HUE[p.platform])}"><title>${esc(p.handle)} on ${p.platform}</title></rect>`;
     })
     .join('');
 
@@ -161,18 +171,21 @@ export async function GET(req: NextRequest) {
     : summary.status === 'at-risk' ? 'not yet today'
     : 'streak broken';
 
+  const statusColor =
+    summary.status === 'safe' ? OK : summary.status === 'broken' ? BAD : MUTED;
+
   return svgResponse(
     `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" role="img" aria-label="Unified coding streak: ${summary.currentStreak} days across ${live.length} platforms">
-  <rect width="${W}" height="${H}" rx="14" fill="#0b0d11" stroke="#232935"/>
-  <text x="22" y="32" font-family="${MONO}" font-size="9" letter-spacing="1.8" fill="#5a6373">UNIFIED STREAK</text>
-  <text x="22" y="84" font-family="${MONO}" font-size="46" font-weight="700" fill="${accent}">${summary.currentStreak}</text>
-  <text x="${26 + String(summary.currentStreak).length * 28}" y="84" font-family="${FONT}" font-size="13" fill="#8c95a4">days</text>
-  <circle cx="25.5" cy="102" r="3.5" fill="${accent}"/>
-  <text x="34" y="106" font-family="${MONO}" font-size="10.5" fill="${accent}">${statusText}</text>
+  <rect x="0.75" y="0.75" width="${W - 1.5}" height="${H - 1.5}" fill="#09090b" stroke="#3f3f46" stroke-width="1.5"/>
+  <text x="22" y="32" font-family="${MONO}" font-size="9" letter-spacing="2.2" fill="${MUTED}">UNIFIED STREAK</text>
+  <text x="20" y="88" font-family="${MONO}" font-size="54" font-weight="700" letter-spacing="-2" fill="${accent}">${summary.currentStreak}</text>
+  <text x="${24 + String(summary.currentStreak).length * 33}" y="88" font-family="${FONT}" font-size="13" fill="${MUTED}">days</text>
+  <rect x="22" y="99" width="7" height="7" fill="${statusColor}"/>
+  <text x="35" y="106" font-family="${MONO}" font-size="10.5" fill="${statusColor}">${statusText}</text>
   ${legend}
-  <text x="${22 + live.length * 15 + 6}" y="129" font-family="${MONO}" font-size="9.5" fill="#5a6373">${live.length} platform${live.length === 1 ? '' : 's'} · longest ${summary.longestStreak}d</text>
+  <text x="${22 + live.length * 15 + 8}" y="129" font-family="${MONO}" font-size="9.5" fill="${MUTED}">${live.length} platform${live.length === 1 ? '' : 's'} · longest ${summary.longestStreak}d</text>
   ${squares}
-  <text x="${gridX}" y="${gridY - 8}" font-family="${MONO}" font-size="8.5" fill="#5a6373">LAST 6 MONTHS · COLOUR = PLATFORM</text>
+  <text x="${gridX}" y="${gridY - 8}" font-family="${MONO}" font-size="8.5" letter-spacing="1.2" fill="${MUTED}">LAST 6 MONTHS · COLOUR = PLATFORM</text>
 </svg>`,
     600,
   );

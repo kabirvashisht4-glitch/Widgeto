@@ -136,7 +136,7 @@ export default async function ProfilePage({ params, searchParams }: Params) {
             return (
               <div key={p.platform} className="card" style={{ padding: 22 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
-                  <span style={{ width: 9, height: 9, borderRadius: 2, background: meta.color }} />
+                  <span style={{ width: 11, height: 11, background: meta.color }} />
                   <span style={{ fontWeight: 600, fontSize: 14.5 }}>{meta.name}</span>
                   <a
                     href={p.profile?.profileUrl}

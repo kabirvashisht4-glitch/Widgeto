@@ -97,13 +97,7 @@ export default function StreakStudio() {
               style={{ ['--accent' as string]: PLATFORM_COLORS[f.id] }}
             >
               <span
-                style={{
-                  width: 8,
-                  height: 8,
-                  borderRadius: 2,
-                  background: PLATFORM_COLORS[f.id],
-                  flexShrink: 0,
-                }}
+                style={{ width: 10, height: 10, background: PLATFORM_COLORS[f.id], flexShrink: 0 }}
               />
               <input
                 value={handles[f.id] ?? ''}
@@ -164,7 +158,6 @@ export default function StreakStudio() {
           style={{
             marginTop: 16,
             padding: '12px 14px',
-            borderRadius: 12,
             fontSize: 12.5,
             color: 'var(--danger)',
             border: '1px solid color-mix(in srgb, var(--danger) 35%, transparent)',
@@ -203,7 +196,7 @@ function Placeholder({ loading }: { loading: boolean }) {
         <div
           style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(26, 9px)',
+            gridTemplateColumns: 'repeat(26, 10px)',
             gap: 3,
             marginBottom: 18,
             opacity: loading ? 0.55 : 0.22,
@@ -214,9 +207,8 @@ function Placeholder({ loading }: { loading: boolean }) {
             <div
               key={i}
               style={{
-                width: 9,
-                height: 9,
-                borderRadius: 2,
+                width: 10,
+                height: 10,
                 background: 'var(--grid-empty)',
                 animation: loading ? `pop 900ms ease ${(i % 26) * 24}ms infinite alternate` : undefined,
               }}

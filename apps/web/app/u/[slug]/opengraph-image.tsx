@@ -22,13 +22,13 @@ export const size = { width: 1200, height: 630 };
 export const contentType = 'image/png';
 
 const HUE: Record<PlatformId, [number, number, number]> = {
-  github: [57, 211, 83],
-  codeforces: [74, 163, 224],
-  leetcode: [255, 161, 22],
-  atcoder: [176, 141, 79],
+  github: [63, 185, 80],
+  codeforces: [88, 166, 255],
+  leetcode: [255, 166, 87],
+  atcoder: [208, 176, 112],
 };
-const EMPTY: [number, number, number] = [26, 30, 38];
-const GROUND: [number, number, number] = [11, 13, 17];
+const EMPTY: [number, number, number] = [28, 28, 31];
+const GROUND: [number, number, number] = [9, 9, 11];
 
 const css = (c: number[]) => `rgb(${c.map(Math.round).join(',')})`;
 
@@ -85,25 +85,25 @@ export default async function Image({ params }: { params: Promise<{ slug: string
           display: 'flex',
           flexDirection: 'column',
           justifyContent: 'space-between',
-          background: '#0b0d11',
+          background: '#09090b',
           padding: 64,
-          color: '#e9ecf2',
+          color: '#fafafa',
           fontFamily: 'sans-serif',
         }}
       >
         <div style={{ display: 'flex', flexDirection: 'column' }}>
-          <div style={{ display: 'flex', fontSize: 22, letterSpacing: 6, color: '#5a6373' }}>
+          <div style={{ display: 'flex', fontSize: 22, letterSpacing: 8, color: '#8b8b95' }}>
             UNIFIED STREAK
           </div>
           <div style={{ display: 'flex', alignItems: 'flex-end', marginTop: 12 }}>
-            <div style={{ display: 'flex', fontSize: 150, fontWeight: 700, color: '#ffb43d', lineHeight: 1 }}>
+            <div style={{ display: 'flex', fontSize: 168, fontWeight: 800, color: '#fafafa', lineHeight: 0.9, letterSpacing: -8 }}>
               {streak}
             </div>
-            <div style={{ display: 'flex', fontSize: 34, color: '#8c95a4', marginLeft: 18, marginBottom: 18 }}>
+            <div style={{ display: 'flex', fontSize: 34, color: '#8b8b95', marginLeft: 20, marginBottom: 22 }}>
               days
             </div>
           </div>
-          <div style={{ display: 'flex', fontSize: 30, color: '#8c95a4', marginTop: 14 }}>
+          <div style={{ display: 'flex', fontSize: 30, color: '#8b8b95', marginTop: 16 }}>
             {who}
           </div>
         </div>
@@ -118,7 +118,6 @@ export default async function Image({ params }: { params: Promise<{ slug: string
                   style={{
                     width: 34,
                     height: 34,
-                    borderRadius: 7,
                     background: cellColor(day, peak),
                   }}
                 />
@@ -127,7 +126,7 @@ export default async function Image({ params }: { params: Promise<{ slug: string
           ))}
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', fontSize: 26, color: '#5a6373' }}>
+        <div style={{ display: 'flex', alignItems: 'center', fontSize: 26, color: '#8b8b95' }}>
           <div style={{ display: 'flex', gap: 10, marginRight: 20 }}>
             {live.map((p) => (
               <div
@@ -135,7 +134,6 @@ export default async function Image({ params }: { params: Promise<{ slug: string
                 style={{
                   width: 22,
                   height: 22,
-                  borderRadius: 5,
                   background: css(HUE[p as PlatformId]),
                 }}
               />

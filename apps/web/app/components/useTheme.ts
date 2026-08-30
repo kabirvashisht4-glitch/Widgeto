@@ -25,9 +25,15 @@ export function usePrefersDark(): boolean {
   return dark;
 }
 
-/** The two colours the grid mixes toward, per theme. */
+/**
+ * The two colours the grid mixes toward, per theme.
+ *
+ * Kept in step with --grid-empty and --grid-ground in globals.css; the mixing
+ * happens in JavaScript, so these cannot simply read the custom properties
+ * without a layout pass on every square.
+ */
 export function gridColors(dark: boolean) {
   return dark
-    ? { empty: [26, 30, 38] as const, ground: [12, 14, 18] as const }
-    : { empty: [235, 237, 240] as const, ground: [255, 255, 255] as const };
+    ? { empty: [28, 28, 31] as const, ground: [9, 9, 11] as const }
+    : { empty: [228, 228, 231] as const, ground: [255, 255, 255] as const };
 }

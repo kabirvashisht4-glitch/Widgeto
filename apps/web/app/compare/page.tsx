@@ -33,7 +33,7 @@ export default function ComparePage() {
         <h1 className="display" style={{ fontSize: 'clamp(42px, 7vw, 74px)', marginTop: 16 }}>
           Whose streak is
           <br />
-          <span style={{ fontStyle: 'italic', color: 'var(--flame-hot)' }}>actually</span> longest?
+          actually longest?
         </h1>
         <p className="dim" style={{ fontSize: 18, lineHeight: 1.55, maxWidth: 580, marginTop: 22 }}>
           Add your friends by handle. Everyone&rsquo;s platforms get merged the same

@@ -61,7 +61,8 @@ export default function Home() {
         >
           One streak.
           <br />
-          <span style={{ fontStyle: 'italic', color: 'var(--flame-hot)' }}>Every</span> platform
+          Every platform
+          <br />
           you code on.
         </h1>
 
@@ -101,11 +102,7 @@ export default function Home() {
               <Swatch color="#ffa116" label="LeetCode day" note="ground problems" />
               <Swatch color="#4aa3e0" label="Codeforces day" note="entered a contest" />
               <hr className="rule" />
-              <Swatch
-                color="linear-gradient(100deg, #39d353, #ffa116)"
-                label="Both"
-                note="the colours mix — the good days"
-              />
+              <Swatch mixed label="Both" note="the colours mix — the good days" />
             </div>
           </div>
         </div>
@@ -129,10 +126,9 @@ export default function Home() {
                 alignItems: 'center',
                 gap: 16,
                 flexWrap: 'wrap',
-                borderRadius: 14,
               }}
             >
-              <span style={{ width: 10, height: 10, borderRadius: 3, background: p.color, flexShrink: 0 }} />
+              <span style={{ width: 12, height: 12, background: p.color, flexShrink: 0 }} />
               <span style={{ fontWeight: 600, minWidth: 110 }}>{p.name}</span>
               <span className={`tag ${p.support === 'official' ? 'ok' : 'warn'}`}>{p.support}</span>
               <span className="dim" style={{ fontSize: 14, flex: 1, minWidth: 240 }}>
@@ -223,16 +219,30 @@ export default function Home() {
   );
 }
 
-function Swatch({ color, label, note }: { color: string; label: string; note: string }) {
+function Swatch({
+  color,
+  label,
+  note,
+  mixed,
+}: {
+  color?: string;
+  label: string;
+  note: string;
+  mixed?: boolean;
+}) {
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
       <span
         style={{
-          width: 30,
-          height: 30,
-          borderRadius: 7,
-          background: color.startsWith('linear') ? color : color,
+          width: 28,
+          height: 28,
           flexShrink: 0,
+          border: '1.5px solid var(--line)',
+          // A blend is shown as an actual blend of two platform hues, not as a
+          // decorative gradient — it is the same mix the grid computes.
+          background: mixed
+            ? 'linear-gradient(90deg, var(--github) 0 50%, var(--leetcode) 50% 100%)'
+            : color,
         }}
       />
       <div>
