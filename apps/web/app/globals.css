@@ -18,7 +18,9 @@
   --line-bright: #39404e;
   --text: #eceef2;
   --text-dim: #98a0ad;
-  --text-faint: #5f6773;
+  /* 5.3:1 on the dark ground. The old value was 3.5:1, which reads fine at a
+     glance and not at all at the 10-12px it is actually used for. */
+  --text-faint: #7b8494;
 
   --github: #39d353;
   --codeforces: #4aa3e0;

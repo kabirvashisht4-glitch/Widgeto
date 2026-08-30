@@ -71,7 +71,9 @@ class Skin {
     line: Color(0xFF262B35),
     text: Color(0xFFECEEF2),
     dim: Color(0xFF98A0AD),
-    faint: Color(0xFF5F6773),
+    // 5.3:1 on the dark ground. The old 0xFF5F6773 was 3.5:1, which reads
+    // fine at a glance and not at all at the 8-11pt it is actually used for.
+    faint: Color(0xFF7B8494),
     empty: Color(0xFF1A1E26),
   );
 
@@ -82,7 +84,8 @@ class Skin {
     line: Color(0xFFE1E4EA),
     text: Color(0xFF14171D),
     dim: Color(0xFF5C6472),
-    faint: Color(0xFF98A0AD),
+    // 4.7:1 on the light ground; the old 0xFF98A0AD was 2.6:1.
+    faint: Color(0xFF6B7280),
     empty: Color(0xFFEBEDF0),
   );
 
