@@ -121,7 +121,12 @@ export default function StreakStudio() {
         </div>
 
         <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
-          <button className="btn" type="submit" disabled={loading || filledCount === 0}>
+          <button
+            className="btn"
+            type="submit"
+            disabled={loading || filledCount === 0}
+            aria-busy={loading}
+          >
             {loading ? 'Merging…' : 'Build my streak'}
           </button>
           <button
@@ -140,6 +145,18 @@ export default function StreakStudio() {
           </span>
         </div>
       </form>
+
+      {/* Politely announced: a sighted user sees the widget appear, but a
+          screen-reader user gets no signal at all without this. */}
+      <p className="sr-only" role="status" aria-live="polite">
+        {loading
+          ? 'Merging your platforms…'
+          : error
+            ? `Error: ${error}`
+            : data
+              ? `Your unified streak is ${data.summary.currentStreak} days, ${data.summary.status.replace('-', ' ')}.`
+              : ''}
+      </p>
 
       {error && (
         <div

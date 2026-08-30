@@ -30,7 +30,9 @@ const PLATFORMS = [
 
 export default function Home() {
   return (
-    <main>
+    <>
+      <a className="skip" href="#content">Skip to content</a>
+      <main id="content">
       {/* ---------- nav ---------- */}
       <nav className="wrap" style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '26px 24px' }}>
         <Mark />
@@ -216,7 +218,8 @@ export default function Home() {
           </div>
         </div>
       </footer>
-    </main>
+      </main>
+    </>
   );
 }
 
