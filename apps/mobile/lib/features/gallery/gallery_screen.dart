@@ -73,7 +73,7 @@ class GalleryScreen extends StatelessWidget {
                   width: 6,
                   height: 6,
                   decoration:
-                      BoxDecoration(color: statusColor, shape: BoxShape.circle),
+                      BoxDecoration(color: statusColor, shape: BoxShape.rectangle),
                 ),
                 const SizedBox(width: 6),
                 Text(statusLabel,
@@ -155,8 +155,8 @@ class _GalleryCard extends StatelessWidget {
           child: Container(
             decoration: BoxDecoration(
               color: skin.surfaceAlt,
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: skin.line),
+              borderRadius: BorderRadius.zero,
+              border: Border.all(color: skin.line, width: 1.5),
             ),
             child: Column(children: [
               Padding(
@@ -185,7 +185,7 @@ class _GalleryCard extends StatelessWidget {
                     height: 8,
                     decoration: BoxDecoration(
                         color: config.accent.color,
-                        borderRadius: BorderRadius.circular(2)),
+                        borderRadius: BorderRadius.zero),
                   ),
                   const SizedBox(width: 10),
                   Expanded(

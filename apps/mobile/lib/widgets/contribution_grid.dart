@@ -178,10 +178,9 @@ class _GridPainter extends CustomPainter {
       canvas.drawRRect(
         RRect.fromRectAndRadius(
           Rect.fromLTWH(col * step + inset, row * step + inset, cell * scale, cell * scale),
-          // Proportional, not fixed: a 2.5pt radius on a 6pt square is very
-          // nearly a circle, and a grid of circles reads as dots rather than
-          // as a contribution calendar.
-          Radius.circular(cell * 0.24),
+          // Square. A contribution calendar is a grid of cells, and rounding
+          // them at these sizes turns the grid into a field of dots.
+          Radius.zero,
         ),
         paint,
       );

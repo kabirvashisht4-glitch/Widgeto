@@ -49,15 +49,11 @@ class WidgetFace extends StatelessWidget {
       padding: const EdgeInsets.all(15),
       decoration: BoxDecoration(
         color: skin.ground,
+        // The one rounded thing in the product, because it is not a style
+        // choice: iOS and Android clip a home-screen widget to a rounded rect,
+        // so a square preview would be a lie about where it ends up.
         borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: skin.line),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.28),
-            blurRadius: 22,
-            offset: const Offset(0, 8),
-          ),
-        ],
+        border: Border.all(color: skin.line, width: 1.5),
       ),
       child: _FaceBody(
         scoped: scoped,
@@ -169,8 +165,7 @@ class _FaceBody extends StatelessWidget {
           style: TextStyle(color: skin.dim, fontSize: 10.5),
         ),
         const SizedBox(height: 7),
-        ClipRRect(
-          borderRadius: BorderRadius.circular(3),
+        ClipRect(
           child: LinearProgressIndicator(
             value: dayGone,
             minHeight: 6,
@@ -322,8 +317,7 @@ class _FaceBody extends StatelessWidget {
         // the Expanded segments collapse to zero. And a childless ColoredBox
         // takes the *smallest* height it is offered, so without stretch every
         // segment is 8pt wide and 0pt tall — a bar that is simply not there.
-        ClipRRect(
-          borderRadius: BorderRadius.circular(4),
+        ClipRect(
           child: SizedBox(
             height: 8,
             width: double.infinity,
@@ -361,7 +355,7 @@ class _FaceBody extends StatelessWidget {
                       height: 7,
                       decoration: BoxDecoration(
                           color: platformColor(e.key),
-                          borderRadius: BorderRadius.circular(2)),
+                          ),
                     ),
                     const SizedBox(width: 7),
                     Expanded(
@@ -456,7 +450,7 @@ class _FaceBody extends StatelessWidget {
                   width: 5,
                   height: 5,
                   decoration:
-                      BoxDecoration(color: status.$2, shape: BoxShape.circle),
+                      BoxDecoration(color: status.$2),
                 ),
                 const SizedBox(width: 5),
                 Flexible(
@@ -547,7 +541,7 @@ class _FaceBody extends StatelessWidget {
                 width: 5,
                 height: 5,
                 decoration:
-                    BoxDecoration(color: status.$2, shape: BoxShape.circle),
+                    BoxDecoration(color: status.$2),
               ),
               const SizedBox(width: 5),
               Flexible(
@@ -572,7 +566,7 @@ class _FaceBody extends StatelessWidget {
                     height: 7,
                     decoration: BoxDecoration(
                         color: platformColor(p.platform),
-                        borderRadius: BorderRadius.circular(2)),
+                        ),
                   ),
                   const SizedBox(width: 5),
                   Text(p.handle,

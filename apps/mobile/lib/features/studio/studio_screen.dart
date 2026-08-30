@@ -111,8 +111,8 @@ class _StudioScreenState extends State<StudioScreen> {
             padding: const EdgeInsets.symmetric(vertical: 26),
             decoration: BoxDecoration(
               color: skin.surfaceAlt,
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: skin.line),
+              borderRadius: BorderRadius.zero,
+              border: Border.all(color: skin.line, width: 1.5),
             ),
             child: Column(children: [
               Center(
@@ -176,8 +176,8 @@ class _StudioScreenState extends State<StudioScreen> {
           _label('ACCENT', skin),
           const SizedBox(height: 12),
           Wrap(
-            spacing: 12,
-            runSpacing: 12,
+            spacing: 9,
+            runSpacing: 9,
             children: [
               for (final accent in Accent.values)
                 _Swatch(
@@ -317,7 +317,7 @@ class _TemplatePicker extends StatelessWidget {
                         ? Color.alphaBlend(
                             accent.withValues(alpha: 0.12), skin.surface)
                         : skin.surface,
-                    borderRadius: BorderRadius.circular(15),
+                    borderRadius: BorderRadius.zero,
                     border: Border.all(
                       color: template == value
                           ? accent.withValues(alpha: 0.65)
@@ -370,14 +370,15 @@ class _Swatch extends StatelessWidget {
           onTap: onTap,
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 160),
-            width: 44,
-            height: 44,
+            // Sized so all six accents fit one row at the narrowest phone
+            // width; wrapping five-then-one reads as a mistake.
+            width: 40,
+            height: 40,
             decoration: BoxDecoration(
               color: accent.color,
-              shape: BoxShape.circle,
               border: Border.all(
-                color: selected ? skin.text : Colors.transparent,
-                width: 2.5,
+                color: selected ? skin.text : skin.line,
+                width: selected ? 3 : 1.5,
               ),
             ),
             child: selected
@@ -419,7 +420,7 @@ class _SourceChip extends StatelessWidget {
             color: selected
                 ? Color.alphaBlend(tint.withValues(alpha: 0.14), skin.surface)
                 : skin.surface,
-            borderRadius: BorderRadius.circular(11),
+            borderRadius: BorderRadius.zero,
             border: Border.all(
                 color: selected ? tint.withValues(alpha: 0.6) : skin.line),
           ),
@@ -429,7 +430,7 @@ class _SourceChip extends StatelessWidget {
               height: 7,
               decoration: BoxDecoration(
                 color: selected ? tint : skin.faint,
-                borderRadius: BorderRadius.circular(2),
+                borderRadius: BorderRadius.zero,
               ),
             ),
             const SizedBox(width: 8),
@@ -463,8 +464,8 @@ class _Segmented<T> extends StatelessWidget {
         padding: const EdgeInsets.all(4),
         decoration: BoxDecoration(
           color: skin.surfaceAlt,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: skin.line),
+          borderRadius: BorderRadius.zero,
+          border: Border.all(color: skin.line, width: 1.5),
         ),
         child: Row(
           children: options.map((option) {
@@ -485,7 +486,7 @@ class _Segmented<T> extends StatelessWidget {
                     alignment: Alignment.center,
                     decoration: BoxDecoration(
                       color: selected ? skin.surface : Colors.transparent,
-                      borderRadius: BorderRadius.circular(11),
+                      borderRadius: BorderRadius.zero,
                       border: Border.all(
                           color: selected ? skin.line : Colors.transparent),
                     ),

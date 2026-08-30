@@ -58,8 +58,7 @@ class InsightsScreen extends StatelessWidget {
                         color: kFlameHot, fontSize: 15, fontWeight: FontWeight.w700)),
               ]),
               const SizedBox(height: 14),
-              ClipRRect(
-                borderRadius: BorderRadius.circular(4),
+              ClipRect(
                 child: LinearProgressIndicator(
                   value: progress,
                   minHeight: 8,
@@ -175,7 +174,7 @@ class InsightsScreen extends StatelessWidget {
                       height: 8,
                       decoration: BoxDecoration(
                           color: platformColor(row.platform),
-                          borderRadius: BorderRadius.circular(2)),
+                          borderRadius: BorderRadius.zero),
                     ),
                     const SizedBox(width: 9),
                     SizedBox(
@@ -186,8 +185,7 @@ class InsightsScreen extends StatelessWidget {
                           style: TextStyle(color: skin.dim, fontSize: 13)),
                     ),
                     Expanded(
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(3),
+                      child: ClipRect(
                         child: LinearProgressIndicator(
                           value: row.share,
                           minHeight: 6,
@@ -249,7 +247,7 @@ class _Delta extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.zero,
       ),
       child: Row(mainAxisSize: MainAxisSize.min, children: [
         Icon(up ? Icons.arrow_upward_rounded : Icons.arrow_downward_rounded,
@@ -275,8 +273,8 @@ class _Card extends StatelessWidget {
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
           color: skin.surface,
-          borderRadius: BorderRadius.circular(18),
-          border: Border.all(color: skin.line),
+          borderRadius: BorderRadius.zero,
+          border: Border.all(color: skin.line, width: 1.5),
         ),
         child: child,
       );

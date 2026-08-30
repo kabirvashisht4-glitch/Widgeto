@@ -41,7 +41,7 @@ class _ConnectScreenState extends State<ConnectScreen> {
       isScrollControlled: true,
       backgroundColor: skin.surface,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        borderRadius: BorderRadius.vertical(top: Radius.zero),
       ),
       builder: (sheetContext) => Padding(
         // Lift above the keyboard rather than hiding the field behind it.
@@ -208,14 +208,14 @@ class _Tile extends StatelessWidget {
         // A connected tile is tinted with its own brand colour, so the wall
         // reads at a glance instead of needing checkmarks.
         color: on ? Color.alphaBlend(tint.withValues(alpha: 0.10), skin.surface) : skin.surface,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: on ? tint.withValues(alpha: 0.55) : skin.line),
+        borderRadius: BorderRadius.zero,
+        border: Border.all(color: on ? tint : skin.line, width: 1.5),
       ),
       child: Material(
         color: Colors.transparent,
         child: InkWell(
           onTap: onTap,
-          borderRadius: BorderRadius.circular(18),
+          borderRadius: BorderRadius.zero,
           child: Padding(
             padding: const EdgeInsets.all(16),
             child: Column(
@@ -259,7 +259,6 @@ class _Mark extends StatelessWidget {
         alignment: Alignment.center,
         decoration: BoxDecoration(
           color: platformColor(platform),
-          borderRadius: BorderRadius.circular(size * 0.29),
         ),
         child: Text(
           platformMark(platform),

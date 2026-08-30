@@ -4,12 +4,22 @@ import 'package:flutter/material.dart';
 /// native home-screen faces all read from here so they cannot drift apart.
 
 // ---- platform identity ----
-const kGitHub = Color(0xFF39D353);
-const kCodeforces = Color(0xFF4AA3E0);
-const kLeetCode = Color(0xFFFFA116);
-const kAtCoder = Color(0xFFB08D4F);
+//
+// These four are the only decorative-looking colours in the product that are
+// not decorative: the grid is readable only because green always means GitHub.
+const kGitHub = Color(0xFF3FB950);
+const kCodeforces = Color(0xFF58A6FF);
+const kLeetCode = Color(0xFFFFA657);
+const kAtCoder = Color(0xFFD0B070);
+
+// ---- signals ----
+const kOk = Color(0xFF3FB950);
+const kDanger = Color(0xFFFF7B72);
+
+/// Kept as the default widget accent. Choosing a colour for something that
+/// sits on your own home screen is a real preference, so the widget keeps an
+/// accent palette even though the app chrome does not.
 const kFlameHot = Color(0xFFFFB43D);
-const kDanger = Color(0xFFFF5C5C);
 
 Color platformColor(String platform) => switch (platform) {
       'github' => kGitHub,
@@ -65,28 +75,28 @@ class Skin {
   final Color empty;
 
   static const dark = Skin(
-    ground: Color(0xFF08090B),
-    surface: Color(0xFF14171D),
-    surfaceAlt: Color(0xFF1B1F27),
-    line: Color(0xFF262B35),
-    text: Color(0xFFECEEF2),
-    dim: Color(0xFF98A0AD),
-    // 5.3:1 on the dark ground. The old 0xFF5F6773 was 3.5:1, which reads
-    // fine at a glance and not at all at the 8-11pt it is actually used for.
-    faint: Color(0xFF7B8494),
-    empty: Color(0xFF1A1E26),
+    ground: Color(0xFF09090B),
+    surface: Color(0xFF0E0E10),
+    surfaceAlt: Color(0xFF18181B),
+    line: Color(0xFF3F3F46),
+    text: Color(0xFFFAFAFA),
+    dim: Color(0xFFA1A1AA),
+    // 5.4:1 on the dark ground. Captions live at 8-11pt, which is exactly
+    // where a too-light grey stops being readable.
+    faint: Color(0xFF8B8B95),
+    empty: Color(0xFF1C1C1F),
   );
 
   static const light = Skin(
-    ground: Color(0xFFFBFBFC),
+    ground: Color(0xFFF7F7F8),
     surface: Color(0xFFFFFFFF),
-    surfaceAlt: Color(0xFFF2F3F6),
-    line: Color(0xFFE1E4EA),
-    text: Color(0xFF14171D),
-    dim: Color(0xFF5C6472),
-    // 4.7:1 on the light ground; the old 0xFF98A0AD was 2.6:1.
-    faint: Color(0xFF6B7280),
-    empty: Color(0xFFEBEDF0),
+    surfaceAlt: Color(0xFFEEEEF0),
+    // Near-black borders: structure is drawn, not implied by a soft grey.
+    line: Color(0xFF18181B),
+    text: Color(0xFF09090B),
+    dim: Color(0xFF52525B),
+    faint: Color(0xFF5F5F68),
+    empty: Color(0xFFE4E4E7),
   );
 
   static Skin of(Brightness b) => b == Brightness.dark ? dark : light;
@@ -109,39 +119,47 @@ ThemeData widgetoTheme(Brightness brightness) {
       surface: s.ground,
       error: kDanger,
     ),
-    dividerTheme: DividerThemeData(color: s.line, thickness: 1),
+    scrollbarTheme: ScrollbarThemeData(
+      thumbColor: WidgetStatePropertyAll(s.line),
+      radius: Radius.zero,
+    ),
+    dividerTheme: DividerThemeData(color: s.line, thickness: 1.5),
     textTheme: TextTheme(
-      headlineLarge: TextStyle(color: s.text, fontSize: 30, fontWeight: FontWeight.w700, letterSpacing: -0.8),
+      headlineLarge: TextStyle(
+          color: s.text, fontSize: 32, fontWeight: FontWeight.w800, letterSpacing: -1.2, height: 1.02),
       titleMedium: TextStyle(color: s.text, fontSize: 16, fontWeight: FontWeight.w600),
       labelLarge: TextStyle(color: s.text, fontSize: 14, fontWeight: FontWeight.w600),
-      labelSmall: TextStyle(color: s.faint, fontSize: 10.5, letterSpacing: 1.8, fontWeight: FontWeight.w500),
+      labelSmall: TextStyle(color: s.faint, fontSize: 10, letterSpacing: 2.2, fontWeight: FontWeight.w600),
       bodyMedium: TextStyle(color: s.dim, fontSize: 14),
       bodySmall: TextStyle(color: s.faint, fontSize: 12),
     ),
     inputDecorationTheme: InputDecorationTheme(
       filled: true,
-      fillColor: s.surfaceAlt,
+      fillColor: s.surface,
       labelStyle: TextStyle(color: s.faint, fontSize: 13),
       border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(14),
-        borderSide: BorderSide(color: s.line),
+        borderRadius: BorderRadius.zero,
+        borderSide: BorderSide(color: s.line, width: 1.5),
       ),
       enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(14),
-        borderSide: BorderSide(color: s.line),
+        borderRadius: BorderRadius.zero,
+        borderSide: BorderSide(color: s.line, width: 1.5),
       ),
       focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(14),
-        borderSide: const BorderSide(color: kGitHub, width: 1.6),
+        borderRadius: BorderRadius.zero,
+        borderSide: BorderSide(color: s.text, width: 2),
       ),
     ),
+    // The primary action is the page's ink, not a colour — the same rule the
+    // website follows, so a green button cannot be mistaken for a GitHub one.
     filledButtonTheme: FilledButtonThemeData(
       style: FilledButton.styleFrom(
-        backgroundColor: kGitHub,
-        foregroundColor: Colors.black,
-        minimumSize: const Size.fromHeight(52),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-        textStyle: const TextStyle(fontSize: 15.5, fontWeight: FontWeight.w600),
+        backgroundColor: s.text,
+        foregroundColor: s.ground,
+        minimumSize: const Size.fromHeight(54),
+        shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
+        textStyle: const TextStyle(
+            fontSize: 13.5, fontWeight: FontWeight.w700, letterSpacing: 0.8),
       ),
     ),
   );
