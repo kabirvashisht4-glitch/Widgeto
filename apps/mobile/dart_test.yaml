@@ -1,0 +1,9 @@
+# Golden tests compare rasterised pixels, and font rendering differs between
+# macOS, Linux and Windows — the same correct code produces a ~9% pixel diff
+# across hosts. So goldens are tagged and pinned to one platform rather than
+# run everywhere and disabled the first time they cry wolf.
+tags:
+  golden:
+    description: >
+      Renders real screens to PNG. Host-specific: regenerate on macOS with
+      `flutter test --update-goldens`.

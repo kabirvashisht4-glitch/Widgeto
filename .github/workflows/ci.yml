@@ -66,9 +66,31 @@ jobs:
       - run: flutter pub get
       - name: Analyze
         run: flutter analyze --fatal-infos
-      - name: Tests and goldens
-        run: flutter test
-      # Golden failures are the ones worth looking at, so publish the diffs.
+      # Behaviour only. Goldens compare rasterised pixels and font rendering
+      # differs between hosts, so running them here would fail on correct code.
+      - name: Tests
+        run: flutter test --exclude-tags golden
+
+  goldens:
+    name: Goldens (macOS)
+    # Pinned to the platform the goldens are authored on. Running them on Linux
+    # produces a ~9% pixel diff from font rasterisation alone — a failure that
+    # says nothing about the code, and the kind that teaches people to ignore a
+    # red build.
+    runs-on: macos-latest
+    defaults:
+      run:
+        working-directory: apps/mobile
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - name: Golden tests
+        run: flutter test --tags golden
+      # The diff images are the whole point of a golden failure.
       - name: Upload golden diffs
         if: failure()
         uses: actions/upload-artifact@v4

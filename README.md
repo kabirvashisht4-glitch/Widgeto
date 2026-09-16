@@ -272,7 +272,9 @@ cd apps/mobile && flutter test  # app tests and goldens
 ```
 
 Goldens render the real screens to PNG, so a layout regression shows up as an
-image diff rather than as something nobody noticed until it shipped.
+image diff rather than as something nobody noticed until it shipped. They are
+host-specific — font rasterisation differs across platforms — so they are
+tagged and CI runs them on macOS only. See [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ---
 

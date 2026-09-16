@@ -72,6 +72,19 @@ your change moves pixels, regenerate them and include the diff:
 cd apps/mobile && flutter test --update-goldens
 ```
 
+**Goldens are host-specific.** Font rasterisation differs between macOS, Linux
+and Windows, so the same correct code produces a ~9% pixel diff across
+platforms. They are tagged `golden` and CI runs them on macOS only:
+
+```bash
+flutter test --exclude-tags golden   # behaviour, runs anywhere
+flutter test --tags golden           # goldens, macOS
+```
+
+If you are not on macOS, change the code and say so in the pull request — a
+maintainer will regenerate. Do not commit goldens generated on another
+platform; every image will differ and the diff becomes unreviewable.
+
 ## Before opening a pull request
 
 ```bash
