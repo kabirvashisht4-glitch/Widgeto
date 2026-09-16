@@ -1,0 +1,96 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  # Connector health drifts without anyone touching the code: two of the four
+  # upstreams are unofficial and can change or disappear. A nightly run turns
+  # that into a notification instead of a user complaint.
+  schedule:
+    - cron: '0 6 * * *'
+
+# A newer push makes an in-flight run irrelevant.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  core:
+    name: Core engine
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      # The engine has no dependencies and runs on Node's own test runner and
+      # type stripping, so there is nothing to build first.
+      - name: Unit tests
+        run: node --test "packages/core/test/*.test.ts"
+
+  web:
+    name: Website
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - name: Types
+        run: npm run typecheck --workspace @widgeto/web
+      - name: Unit tests
+        run: node --test "apps/web/test/*.test.ts"
+      - name: Production build
+        run: npm run build --workspace @widgeto/web
+        env:
+          # A build must not require a live token; connectors fail soft.
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  app:
+    name: Flutter app
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/mobile
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - name: Analyze
+        run: flutter analyze --fatal-infos
+      - name: Tests and goldens
+        run: flutter test
+      # Golden failures are the ones worth looking at, so publish the diffs.
+      - name: Upload golden diffs
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: golden-failures
+          path: apps/mobile/test/failures/
+          if-no-files-found: ignore
+
+  connectors:
+    name: Live connectors
+    # Only on a schedule or by hand: a pull request should never fail because
+    # somebody else's API had a bad minute.
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - name: Check every upstream still answers
+        run: node packages/core/bin/widgeto.ts --github torvalds --codeforces tourist --leetcode lee215 --atcoder tourist
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -6,6 +6,7 @@
  * polite caller instead of one per widget refresh.
  */
 import { NextRequest, NextResponse } from 'next/server';
+import { clientKey, rateLimit, rateLimitHeaders } from '../../lib/rateLimit';
 import { aggregate, attributeHeatmap, normalizeHandle, PLATFORM_IDS, safeTimezone } from '@widgeto/core';
 import type { HandleMap, PlatformId, UnifiedActivity } from '@widgeto/core';
 
@@ -45,6 +46,15 @@ function writeCache(key: string, body: unknown, ttl: number) {
 }
 
 export async function GET(req: NextRequest) {
+  // Checked before anything else: a refused request should cost nothing.
+  const limit = rateLimit(clientKey(req.headers), { limit: 30, windowMs: 60_000 });
+  if (!limit.ok) {
+    return NextResponse.json(
+      { error: `Too many requests. Try again in ${limit.retryAfter}s.` },
+      { status: 429, headers: { ...rateLimitHeaders(limit), 'Access-Control-Allow-Origin': '*' } },
+    );
+  }
+
   const params = req.nextUrl.searchParams;
   const timezone = safeTimezone(params.get('tz') ?? undefined);
   const days = Math.min(Math.max(Number(params.get('days') ?? 365), 7), 365);
@@ -74,7 +84,11 @@ export async function GET(req: NextRequest) {
   const cached = readCache(key);
   if (cached) {
     return NextResponse.json(cached, {
-      headers: { 'x-widgeto-cache': 'hit', 'Access-Control-Allow-Origin': '*' },
+      headers: {
+        'x-widgeto-cache': 'hit',
+        'Access-Control-Allow-Origin': '*',
+        ...rateLimitHeaders(limit),
+      },
     });
   }
 
@@ -104,6 +118,7 @@ export async function GET(req: NextRequest) {
 
   return NextResponse.json(body, {
     headers: {
+      ...rateLimitHeaders(limit),
       'x-widgeto-cache': 'miss',
       // Read-only public data keyed by public handles — there is nothing here
       // to protect with an origin check, and opening it lets the Flutter web

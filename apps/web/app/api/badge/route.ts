@@ -10,6 +10,7 @@
  * image pipeline. No external fonts — GitHub's image proxy would not load them.
  */
 import { NextRequest, NextResponse } from 'next/server';
+import { clientKey, rateLimit } from '../../lib/rateLimit';
 import {
   aggregate,
   attributeHeatmap,
@@ -89,6 +90,13 @@ function errorBadge(message: string) {
 }
 
 export async function GET(req: NextRequest) {
+  // Badges are fetched by README proxies on behalf of many readers at once, so
+  // the ceiling is higher here than on the JSON endpoint — and a refusal is
+  // still an image, because a broken image in a README is worse than a stale
+  // number.
+  const limit = rateLimit(clientKey(req.headers), { limit: 60, windowMs: 60_000 });
+  if (!limit.ok) return errorBadge('widgeto: rate limited');
+
   const params = req.nextUrl.searchParams;
   const timezone = safeTimezone(params.get('tz') ?? undefined);
   const style = params.get('style') === 'flat' ? 'flat' : 'card';

@@ -3,6 +3,18 @@
   "private": true,
   "version": "0.1.0",
   "description": "One streak across every platform you code on.",
-  "workspaces": ["packages/*", "apps/*"],
-  "engines": { "node": ">=22" }
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "dev": "npm run dev --workspace @widgeto/web",
+    "build": "npm run build --workspace @widgeto/web",
+    "typecheck": "npm run typecheck --workspace @widgeto/web",
+    "test": "node --test \"packages/core/test/*.test.ts\" \"apps/web/test/*.test.ts\"",
+    "streak": "node packages/core/bin/widgeto.ts"
+  }
 }
