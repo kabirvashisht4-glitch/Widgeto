@@ -75,8 +75,8 @@ export default function Home() {
         >
           You don&rsquo;t have a GitHub streak and a LeetCode streak. You have{' '}
           <strong style={{ color: 'var(--text)', fontWeight: 600 }}>one habit</strong> scattered
-          across five sites. Widgeto merges them into a single number and puts it on your home
-          screen.
+          across {PLATFORMS.length} sites. Widgeto merges them into a single number and puts it
+          on your home screen.
         </p>
 
         <div style={{ marginTop: 40 }}>
