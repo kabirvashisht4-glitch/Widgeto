@@ -2,11 +2,27 @@
 
 Flutter app + native home-screen widget faces.
 
-> **Status: written, not yet compiled.** Flutter isn't installed on the machine
-> this was authored on, so none of this has been built or run. Treat it as a
-> correct-by-design starting point that still needs a first `flutter run`, not
-> as tested code. The `packages/core` engine and the website *have* been
-> verified against the live APIs.
+> **Status.** The Flutter app is built and tested: the analyzer is clean, 37
+> tests and 11 goldens pass, and it ships as an installable PWA served at
+> `/app` — which is how you run Widgeto without Xcode or the Android SDK.
+>
+> The **native widget faces** (`ios/`, `android/`) are the part still unproven.
+> They are written but have never been compiled, because producing an `.ipa` or
+> `.apk` needs Xcode and the Android SDK. The setup below is what they need.
+
+## Running it without a native toolchain
+
+```bash
+../../scripts/build-app.sh   # builds into apps/web/public/app
+npm run dev --workspace @widgeto/web
+```
+
+Then open `/app` and use *Add to Home Screen* (iOS) or *Install app*
+(Android). It runs full-screen, works offline, and talks to the API on the same
+origin — no configuration.
+
+This gets you the app. It does **not** get you a home-screen *widget*: the OS
+only renders those from a signed native build.
 
 ## Why Flutter plus native
 
