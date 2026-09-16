@@ -22,11 +22,28 @@ import 'support/sample.dart';
 ///
 /// Regenerate with:  flutter test --update-goldens test/golden_test.dart
 
-/// The test environment ships a font whose every glyph is a box, which makes a
-/// golden useless for judging a design. Loading the SDK's real Roboto fixes it.
+/// The test environment ships a font whose every glyph is an opaque box, which
+/// makes a golden useless for judging a design — and, worse, produces a golden
+/// that looks plausible in CI logs while comparing garbage.
+///
+/// The fonts live inside the Flutter SDK, whose location differs per machine:
+/// Homebrew puts it under /opt/homebrew, CI puts it in a tool cache. FLUTTER_ROOT
+/// is set by `flutter test` itself, so it is the only portable way to find them.
 Future<void> _loadRealFonts() async {
-  const dir = '/opt/homebrew/share/flutter/bin/cache/artifacts/material_fonts';
-  if (!Directory(dir).existsSync()) return;
+  final root = Platform.environment['FLUTTER_ROOT'];
+  if (root == null || root.isEmpty) {
+    throw StateError(
+      'FLUTTER_ROOT is not set, so the real fonts cannot be found. '
+      'Run these through `flutter test`, which sets it.',
+    );
+  }
+
+  final dir = '$root/bin/cache/artifacts/material_fonts';
+  if (!Directory(dir).existsSync()) {
+    // Failing loudly matters more than it looks: silently skipping this renders
+    // every glyph as a box, and the goldens then compare box art to real text.
+    throw StateError('No fonts at $dir — cannot render goldens faithfully.');
+  }
 
   for (final entry in {
     'Roboto': ['Roboto-Regular.ttf', 'Roboto-Medium.ttf', 'Roboto-Bold.ttf'],
@@ -34,11 +51,16 @@ Future<void> _loadRealFonts() async {
     'MaterialIcons': ['MaterialIcons-Regular.otf'],
   }.entries) {
     final loader = FontLoader(entry.key);
+    var loaded = 0;
     for (final file in entry.value) {
       final f = File('$dir/$file');
       if (f.existsSync()) {
         loader.addFont(Future.value(ByteData.sublistView(f.readAsBytesSync())));
+        loaded++;
       }
+    }
+    if (loaded == 0) {
+      throw StateError('None of ${entry.key}\'s files were found in $dir.');
     }
     await loader.load();
   }
