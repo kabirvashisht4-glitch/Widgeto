@@ -1,0 +1,34 @@
+name: Bug report
+description: Something is wrong with a streak, a widget or the site
+labels: [bug]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: What you expected, and what you got instead.
+    validations:
+      required: true
+  - type: input
+    id: handles
+    attributes:
+      label: Handles involved
+      description: >
+        Public usernames only — never paste a token or a cookie. If the streak
+        number is wrong, these let it be reproduced exactly.
+      placeholder: gh-torvalds, lc-lee215
+  - type: input
+    id: timezone
+    attributes:
+      label: Your timezone
+      description: >
+        Almost every wrong-streak report comes down to a day boundary, so this
+        is usually the first thing needed.
+      placeholder: Asia/Kolkata
+  - type: dropdown
+    id: where
+    attributes:
+      label: Where
+      options: [Website, The app (PWA), README badge, CLI, Home-screen widget]
+    validations:
+      required: true

@@ -1,0 +1,30 @@
+name: New platform
+description: Ask for a platform Widgeto does not merge yet
+labels: [connector]
+body:
+  - type: input
+    id: platform
+    attributes:
+      label: Platform
+      placeholder: CodeChef, Duolingo, Stack Overflow…
+    validations:
+      required: true
+  - type: textarea
+    id: api
+    attributes:
+      label: How can activity be read?
+      description: >
+        A link to an API, or a public profile page that shows daily activity.
+        Widgeto only reads public profile data — it never asks for a password
+        or a session cookie, so a platform with no public endpoint needs a real
+        OAuth flow.
+    validations:
+      required: true
+  - type: dropdown
+    id: granularity
+    attributes:
+      label: Does it expose per-event timestamps, or only a daily calendar?
+      description: >
+        Timestamps let days be bucketed into your real timezone; a calendar
+        usually only comes as a UTC grid.
+      options: [Per-event timestamps, Daily calendar only, Not sure]
