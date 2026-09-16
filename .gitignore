@@ -12,3 +12,6 @@ apps/mobile/.dart_tool/
 apps/mobile/.flutter-plugins*
 apps/mobile/ios/Pods/
 apps/mobile/ios/Flutter/ephemeral/
+
+# The app's web build is generated into the site; never commit the output.
+apps/web/public/app/

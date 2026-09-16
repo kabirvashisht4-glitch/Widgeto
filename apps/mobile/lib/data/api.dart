@@ -5,12 +5,14 @@ import 'models.dart';
 
 /// Talks to the Widgeto API and remembers the user's handles.
 class WidgetoApi {
-  /// Point this at your deployment. The GitHub token lives on the server, so
-  /// the app ships no secrets at all.
-  static const base = String.fromEnvironment(
-    'WIDGETO_API',
-    defaultValue: 'https://widgeto.vercel.app',
-  );
+  /// Where the API lives. The GitHub token stays on the server, so the app
+  /// ships no secrets at all.
+  ///
+  /// Empty by default, which means same-origin. The web build is served from
+  /// `/app` on the very deployment that hosts the API, so it needs no
+  /// configuration and triggers no CORS preflight. A native build overrides it
+  /// at compile time with --dart-define=WIDGETO_API=https://your-deploy.
+  static const base = String.fromEnvironment('WIDGETO_API');
 
   static const platforms = ['github', 'codeforces', 'leetcode', 'atcoder'];
 
@@ -71,6 +73,8 @@ class WidgetoApi {
       if (v.trim().isNotEmpty) query[k] = v.trim();
     });
 
+    // A relative URI resolves against the page origin in the browser; a
+    // native build always has an absolute base.
     final uri = Uri.parse('$base/api/streak').replace(queryParameters: query);
     final res = await http.get(uri).timeout(const Duration(seconds: 20));
 

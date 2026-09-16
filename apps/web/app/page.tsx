@@ -39,6 +39,9 @@ export default function Home() {
         <span style={{ fontWeight: 600, letterSpacing: '-0.01em' }}>Widgeto</span>
         <span className="tag" style={{ marginLeft: 6 }}>alpha</span>
         <div style={{ marginLeft: 'auto', display: 'flex', gap: 20 }}>
+          <a href="/app" className="dim" style={{ fontSize: 14, textDecoration: 'none' }}>
+            Open app
+          </a>
           <Link href="/compare" className="dim" style={{ fontSize: 14, textDecoration: 'none' }}>
             Leaderboard
           </Link>
@@ -142,6 +145,60 @@ export default function Home() {
           Marked honestly on purpose. Unofficial sources can break without warning, so a dead
           connector greys out one row — it never takes the widget down with it. CodeChef and Stack Overflow are next.
         </p>
+      </section>
+
+      {/* ---------- the app ---------- */}
+      <section className="wrap" style={{ padding: '48px 24px' }}>
+        <div className="eyebrow">the app</div>
+        <h2 className="display" style={{ fontSize: 'clamp(30px, 4vw, 42px)', marginTop: 12 }}>
+          Put it on your home screen.
+        </h2>
+        <p className="dim" style={{ fontSize: 16, lineHeight: 1.65, marginTop: 18, maxWidth: 580 }}>
+          Widgeto installs straight from the browser &mdash; no App Store, no
+          TestFlight, nothing to sideload. Open it, then use your browser&rsquo;s
+          <strong style={{ color: 'var(--text)' }}> Add to Home Screen</strong>.
+          It runs full-screen and works offline.
+        </p>
+
+        <div style={{ display: 'flex', gap: 12, marginTop: 24, flexWrap: 'wrap' }}>
+          <a href="/app" className="btn" style={{ textDecoration: 'none' }}>
+            Open the app
+          </a>
+        </div>
+
+        <div className="card" style={{ marginTop: 22, padding: 22 }}>
+          <div className="eyebrow">how to install</div>
+          <div
+            style={{
+              display: 'grid',
+              gap: 18,
+              gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
+              marginTop: 14,
+            }}
+          >
+            <div>
+              <h3 style={{ margin: 0, fontSize: 14.5, fontWeight: 600 }}>iPhone &amp; iPad</h3>
+              <p className="dim" style={{ fontSize: 14, marginTop: 8 }}>
+                Open <code className="mono">/app</code> in Safari &rarr; Share &rarr;
+                Add to Home Screen.
+              </p>
+            </div>
+            <div>
+              <h3 style={{ margin: 0, fontSize: 14.5, fontWeight: 600 }}>Android</h3>
+              <p className="dim" style={{ fontSize: 14, marginTop: 8 }}>
+                Open it in Chrome &rarr; menu &rarr; Install app. Chrome usually
+                offers this on its own.
+              </p>
+            </div>
+            <div>
+              <h3 style={{ margin: 0, fontSize: 14.5, fontWeight: 600 }}>Native widgets</h3>
+              <p className="dim" style={{ fontSize: 14, marginTop: 8 }}>
+                The real home-screen widget needs a native build. See the repo
+                for Xcode and Android setup.
+              </p>
+            </div>
+          </div>
+        </div>
       </section>
 
       {/* ---------- readme badge ---------- */}
