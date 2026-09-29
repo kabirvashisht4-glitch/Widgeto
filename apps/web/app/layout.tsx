@@ -1,14 +1,9 @@
 import type { Metadata } from 'next';
 import './globals.css';
-
-/**
- * `metadataBase` resolves the relative URLs below into absolute ones, which is
- * what every social crawler requires. It follows the deployment rather than
- * being hard-coded, so a preview deploy advertises itself and not production.
- */
-const siteUrl =
-  process.env.NEXT_PUBLIC_SITE_URL ??
-  (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3210');
+// `metadataBase` resolves the relative URLs below into absolute ones, which is
+// what every social crawler requires. Shared with robots and the sitemap so the
+// three cannot disagree about what this deployment is called.
+import { siteUrl } from './lib/site';
 
 const description =
   'Your GitHub, Codeforces, LeetCode and AtCoder activity merged into a single streak, on your home screen.';
