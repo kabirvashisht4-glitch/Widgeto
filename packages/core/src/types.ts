@@ -7,7 +7,12 @@
  * the widget renderer never learn anything platform-specific.
  */
 
-export type PlatformId = 'github' | 'leetcode' | 'codeforces' | 'atcoder';
+export type PlatformId =
+  | 'github'
+  | 'leetcode'
+  | 'codeforces'
+  | 'atcoder'
+  | 'stackoverflow';
 
 /** A calendar day (`YYYY-MM-DD`, user-local) and how much happened on it. */
 export interface DayCount {
@@ -94,6 +99,8 @@ export interface HandleMap {
   leetcode?: string;
   codeforces?: string;
   atcoder?: string;
+  /** Stack Exchange identifies users by number, so this is the numeric id. */
+  stackoverflow?: string;
 }
 
 export interface FetchContext {
@@ -103,6 +110,11 @@ export interface FetchContext {
   days: number;
   /** GitHub needs a token even for public contribution calendars. */
   githubToken?: string;
+  /**
+   * Optional Stack Exchange app key. Raises that connector's quota from 300
+   * requests a day per IP to 10,000; everything still works without it.
+   */
+  stackExchangeKey?: string;
   /** Injectable for tests and for Workers' fetch. */
   fetchImpl?: typeof fetch;
   /** Per-request timeout in ms. */

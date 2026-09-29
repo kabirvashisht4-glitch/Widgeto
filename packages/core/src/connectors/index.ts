@@ -9,6 +9,7 @@ import { fetchGitHub } from './github.ts';
 import { fetchLeetCode } from './leetcode.ts';
 import { fetchCodeforces } from './codeforces.ts';
 import { fetchAtCoder } from './atcoder.ts';
+import { fetchStackOverflow } from './stackoverflow.ts';
 
 export type Connector = (handle: string, ctx: FetchContext) => Promise<PlatformResult>;
 
@@ -51,6 +52,15 @@ export const CONNECTORS: Record<PlatformId, ConnectorMeta> = {
     handleHint: 'tourist',
     support: 'unofficial',
     fetch: fetchAtCoder,
+  },
+  stackoverflow: {
+    id: 'stackoverflow',
+    name: 'Stack Overflow',
+    color: '#f48024',
+    // A numeric id, because display names are neither unique nor stable.
+    handleHint: '22656',
+    support: 'official',
+    fetch: fetchStackOverflow,
   },
   leetcode: {
     id: 'leetcode',

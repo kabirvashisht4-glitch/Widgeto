@@ -14,7 +14,13 @@ class WidgetoApi {
   /// at compile time with --dart-define=WIDGETO_API=https://your-deploy.
   static const base = String.fromEnvironment('WIDGETO_API');
 
-  static const platforms = ['github', 'codeforces', 'leetcode', 'atcoder'];
+  static const platforms = [
+    'github',
+    'codeforces',
+    'leetcode',
+    'atcoder',
+    'stackoverflow',
+  ];
 
   /// A real, recognisable handle per platform — a placeholder that shows the
   /// shape expected beats one that just repeats the field name.
@@ -23,6 +29,7 @@ class WidgetoApi {
         'codeforces' => 'tourist',
         'leetcode' => 'lee215',
         'atcoder' => 'tourist',
+        'stackoverflow' => '22656',
         _ => 'username',
       };
 

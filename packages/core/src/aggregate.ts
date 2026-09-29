@@ -23,6 +23,7 @@ export async function aggregate(
     timezone: safeTimezone(options.timezone),
     days: options.days ?? 365,
     githubToken: options.githubToken,
+    stackExchangeKey: options.stackExchangeKey,
     fetchImpl: options.fetchImpl,
     timeoutMs: options.timeoutMs ?? 12_000,
   };

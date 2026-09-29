@@ -7,12 +7,12 @@
 **One streak across every platform you code on.**
 
 You don't have a GitHub streak and a LeetCode streak. You have *one habit*
-scattered across four sites. Widgeto merges them into a single number and puts
+scattered across five sites. Widgeto merges them into a single number and puts
 it on your home screen.
 
 [![CI](https://github.com/kabirvashisht4-glitch/Widgeto/actions/workflows/ci.yml/badge.svg)](https://github.com/kabirvashisht4-glitch/Widgeto/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-black.svg)](LICENSE)
-[![Platforms](https://img.shields.io/badge/platforms-GitHub%20%C2%B7%20Codeforces%20%C2%B7%20LeetCode%20%C2%B7%20AtCoder-black)](#connected-platforms)
+[![Platforms](https://img.shields.io/badge/platforms-5-black)](#connected-platforms)
 
 </div>
 
@@ -30,7 +30,7 @@ Widgeto counts the habit, not the hostname.
 <tr>
 <td width="50%">
 
-**One number, not four**
+**One number, not five**
 Do anything on any connected platform and the day counts.
 
 **Colour is the platform**
@@ -168,6 +168,7 @@ variable:
 |---|---|---|
 | `GITHUB_TOKEN` | yes | A classic PAT with **no scopes**. Public contribution calendars only. |
 | `NEXT_PUBLIC_SITE_URL` | no | Canonical URL for social cards. Inferred from `VERCEL_URL` otherwise. |
+| `STACKEXCHANGE_KEY` | no | Raises Stack Overflow's quota from 300 requests/day per IP to 10,000. Everything works without it. |
 
 `GET /api/health` tells you whether the token actually landed — a deploy that
 forgot it returns `503` with `{"checks":{"githubToken":false}}` instead of
@@ -182,6 +183,7 @@ failing silently for every user.
 | **GitHub** | Official GraphQL | UTC day | Needs a token even for public data |
 | **Codeforces** | Official public API | **Exact** | Anonymous, ~1 req/2s, per-submission timestamps |
 | **AtCoder** | Community mirror ([kenkoooo]) | **Exact** | No first-party API exists |
+| **Stack Overflow** | Official Stack Exchange API | **Exact** | Uses your numeric user id, not a display name |
 | **LeetCode** | Public profile endpoint | UTC day | Unofficial — can break without notice |
 
 Marked honestly on purpose. A dead connector greys out one row; it never takes

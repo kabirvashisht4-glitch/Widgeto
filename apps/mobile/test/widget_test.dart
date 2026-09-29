@@ -25,10 +25,10 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('Where do you\ncode?'), findsOneWidget);
-      for (final mark in ['GH', 'CF', 'LC', 'AC']) {
+      for (final mark in ['GH', 'CF', 'LC', 'AC', 'SO']) {
         expect(find.text(mark), findsOneWidget);
       }
-      expect(find.text('tap to add'), findsNWidgets(4));
+      expect(find.text('tap to add'), findsNWidgets(5));
     });
 
     testWidgets('cannot continue with nothing connected', (tester) async {
@@ -467,7 +467,13 @@ void main() {
 
   group('palette', () {
     test('every platform has its own colour, label and mark', () {
-      const platforms = ['github', 'codeforces', 'leetcode', 'atcoder'];
+      const platforms = [
+        'github',
+        'codeforces',
+        'leetcode',
+        'atcoder',
+        'stackoverflow',
+      ];
       expect(platforms.map(platformColor).toSet(), hasLength(platforms.length));
       for (final p in platforms) {
         expect(platformLabel(p), isNot(p));

@@ -21,6 +21,7 @@ export const PLATFORM_COLORS: Record<PlatformId, string> = {
   codeforces: '#4aa3e0',
   leetcode: '#ffa116',
   atcoder: '#b08d4f',
+  stackoverflow: '#ff9c4a',
 };
 
 function hexToRgb(hex: string): [number, number, number] {

@@ -26,6 +26,7 @@ const HUE: Record<PlatformId, [number, number, number]> = {
   codeforces: [88, 166, 255],
   leetcode: [255, 166, 87],
   atcoder: [208, 176, 112],
+  stackoverflow: [255, 156, 74],
 };
 const EMPTY: [number, number, number] = [28, 28, 31];
 const GROUND: [number, number, number] = [9, 9, 11];

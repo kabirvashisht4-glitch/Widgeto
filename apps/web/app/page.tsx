@@ -21,6 +21,12 @@ const PLATFORMS = [
     detail: 'Community mirror at kenkoooo. Per-submission timestamps, so days are exact.',
   },
   {
+    name: 'Stack Overflow',
+    color: '#ff9c4a',
+    support: 'official' as const,
+    detail: 'Official Stack Exchange API. Per-event timestamps, so days are exact. Uses your numeric user id.',
+  },
+  {
     name: 'LeetCode',
     color: '#ffa116',
     support: 'unofficial' as const,
@@ -57,7 +63,7 @@ export default function Home() {
 
       {/* ---------- hero ---------- */}
       <section className="wrap" style={{ paddingTop: 40, paddingBottom: 56 }}>
-        <div className="eyebrow">github · codeforces · leetcode · atcoder</div>
+        <div className="eyebrow">github · codeforces · leetcode · atcoder · stack overflow</div>
         <h1
           className="display"
           style={{ fontSize: 'clamp(52px, 9vw, 104px)', marginTop: 18, maxWidth: 900 }}

@@ -11,6 +11,7 @@ const kGitHub = Color(0xFF3FB950);
 const kCodeforces = Color(0xFF58A6FF);
 const kLeetCode = Color(0xFFFFA657);
 const kAtCoder = Color(0xFFD0B070);
+const kStackOverflow = Color(0xFFFF9C4A);
 
 // ---- signals ----
 const kOk = Color(0xFF3FB950);
@@ -26,6 +27,7 @@ Color platformColor(String platform) => switch (platform) {
       'codeforces' => kCodeforces,
       'leetcode' => kLeetCode,
       'atcoder' => kAtCoder,
+      'stackoverflow' => kStackOverflow,
       _ => const Color(0xFF5F6773),
     };
 
@@ -34,6 +36,7 @@ String platformLabel(String platform) => switch (platform) {
       'codeforces' => 'Codeforces',
       'leetcode' => 'LeetCode',
       'atcoder' => 'AtCoder',
+      'stackoverflow' => 'Stack Overflow',
       _ => platform,
     };
 
@@ -43,6 +46,7 @@ String platformMark(String platform) => switch (platform) {
       'codeforces' => 'CF',
       'leetcode' => 'LC',
       'atcoder' => 'AC',
+      'stackoverflow' => 'SO',
       _ => '??',
     };
 

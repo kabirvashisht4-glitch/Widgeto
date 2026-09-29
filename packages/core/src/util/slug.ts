@@ -19,6 +19,7 @@ const TO_SHORT: Record<PlatformId, string> = {
   codeforces: 'cf',
   leetcode: 'lc',
   atcoder: 'ac',
+  stackoverflow: 'so',
 };
 
 const TO_LONG = Object.fromEntries(

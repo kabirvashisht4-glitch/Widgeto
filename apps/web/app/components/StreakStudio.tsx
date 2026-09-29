@@ -25,6 +25,8 @@ const FIELDS: { id: PlatformId; label: string; hint: string; support: 'official'
   { id: 'codeforces', label: 'Codeforces', hint: 'tourist', support: 'official' },
   { id: 'leetcode', label: 'LeetCode', hint: 'lee215', support: 'unofficial' },
   { id: 'atcoder', label: 'AtCoder', hint: 'tourist', support: 'unofficial' },
+  // A numeric id: Stack Exchange display names are neither unique nor stable.
+  { id: 'stackoverflow', label: 'Stack Overflow', hint: '22656', support: 'official' },
 ];
 
 const DEMO: Record<PlatformId, string> = {
@@ -32,6 +34,7 @@ const DEMO: Record<PlatformId, string> = {
   codeforces: 'tourist',
   leetcode: 'lee215',
   atcoder: 'tourist',
+  stackoverflow: '22656',
 };
 
 export default function StreakStudio() {
