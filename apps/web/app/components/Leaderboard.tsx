@@ -1,7 +1,8 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
-import type { PlatformId, StreakSummary } from '@widgeto/core';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { decodeSlug, encodeSlug } from '@widgeto/core';
+import type { HandleMap, PlatformId, StreakSummary } from '@widgeto/core';
 import { PLATFORM_COLORS } from './ContributionGrid';
 
 /**
@@ -26,54 +27,135 @@ interface Person {
 let nextId = 1;
 const blank = (input = ''): Person => ({ id: nextId++, input, loading: false });
 
-const SHORT: Record<string, PlatformId> = {
-  gh: 'github',
-  cf: 'codeforces',
-  lc: 'leetcode',
-  ac: 'atcoder',
-};
-const TO_SHORT = Object.fromEntries(Object.entries(SHORT).map(([s, l]) => [l, s]));
-
 /**
- * People will type `torvalds`, `gh-torvalds`, or a whole slug. Accept all
- * three; a bare handle is assumed to be GitHub, because that is the one
- * account everyone in this audience has.
+ * People type `torvalds`, `gh-torvalds`, or a whole slug. All three work.
+ *
+ * Parsing goes through the shared slug codec rather than a second copy of the
+ * platform table. This screen used to keep its own, and it silently stopped
+ * understanding Stack Overflow the moment a platform was added to core —
+ * exactly the drift one source of truth exists to prevent.
+ *
+ * A bare handle is assumed to be GitHub, because that is the one account
+ * everyone in this audience has.
  */
+function parsePerson(input: string): HandleMap | null {
+  const trimmed = input.trim();
+  if (!trimmed) return null;
+
+  const handles = decodeSlug(trimmed);
+  if (Object.keys(handles).length > 0) return handles;
+
+  // No platform prefix anywhere — treat the whole thing as a GitHub handle.
+  return decodeSlug(`gh-${trimmed}`);
+}
+
 function toQuery(input: string): string | null {
-  const parts = input.trim().split('+').filter(Boolean);
-  if (parts.length === 0) return null;
+  const handles = parsePerson(input);
+  if (!handles) return null;
 
   const params = new URLSearchParams();
-  for (const part of parts) {
-    const cut = part.indexOf('-');
-    const prefix = cut > 0 ? part.slice(0, cut).toLowerCase() : '';
-    if (SHORT[prefix]) params.set(SHORT[prefix], part.slice(cut + 1));
-    else params.set('github', part);
-  }
+  for (const [platform, handle] of Object.entries(handles)) params.set(platform, handle);
   return params.toString() || null;
 }
 
+/** `?p=gh-torvalds,gh-you+lc-you` — the board, in a link. */
+function readBoardFromUrl(): string[] | null {
+  if (typeof window === 'undefined') return null;
+  const raw = new URLSearchParams(window.location.search).get('p');
+  if (!raw) return null;
+  const entries = raw.split(',').map((s) => s.trim()).filter(Boolean).slice(0, 8);
+  return entries.length ? entries : null;
+}
+
+const DEFAULT_BOARD = ['torvalds', 'gh-kabirvashisht4-glitch', ''];
+
 export default function Leaderboard() {
-  const [people, setPeople] = useState<Person[]>([
-    blank('torvalds'),
-    blank('gh-kabirvashisht4-glitch'),
-    blank(),
-  ]);
+  // Seeded with the defaults on both the server and the first client render; a
+  // shared board is applied after mount, because reading the URL during render
+  // would make the two disagree.
+  const [people, setPeople] = useState<Person[]>(DEFAULT_BOARD.map(blank));
   const [timezone, setTimezone] = useState('UTC');
+  const [copied, setCopied] = useState(false);
+  const autoRanked = useRef(false);
+  const hydrated = useRef(false);
+  // Lets `rank()` see the current roster without taking `people` as a
+  // dependency, which would recreate it on every keystroke.
+  const peopleRef = useRef(people);
+  peopleRef.current = people;
 
   useEffect(() => {
     setTimezone(Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC');
+
+    const shared = readBoardFromUrl();
+    hydrated.current = true;
+    if (!shared) return;
+
+    // Seed and rank together: a shared link should show its board, not an
+    // empty form, and splitting these across two effects is what raced.
+    const seeded = shared.map(blank);
+    setPeople(seeded);
+    autoRanked.current = true;
+    rank(seeded);
+    // rank is stable across renders; this must run exactly once, on mount.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const rank = useCallback(async () => {
-    const targets = people.filter((p) => p.input.trim());
-    if (targets.length === 0) return;
+  /**
+   * Keep the address bar in step with the board.
+   *
+   * Derived from state in its own effect rather than written inside the rank
+   * action: doing it there captured whatever `people` was when the callback
+   * was created, so a board opened from a shared link promptly overwrote that
+   * link with the defaults.
+   */
+  useEffect(() => {
+    if (!hydrated.current) return;
 
-    setPeople((ps) => ps.map((p) => (p.input.trim() ? { ...p, loading: true, error: undefined } : p)));
+    const board = people.map((p) => p.input.trim()).filter(Boolean);
+    const url = new URL(window.location.href);
+    if (board.length) url.searchParams.set('p', board.join(','));
+    else url.searchParams.delete('p');
 
-    // Everyone is looked up concurrently; one bad handle must not stall the
-    // rest of the board.
-    await Promise.all(
+    // replaceState, not push: editing the board is not a navigation and should
+    // not add a back-button step per keystroke.
+    window.history.replaceState(null, '', url);
+  }, [people]);
+
+  const copyLink = useCallback(async () => {
+    try {
+      await navigator.clipboard.writeText(window.location.href);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1600);
+    } catch {
+      // Clipboard is blocked in some embedded contexts. The URL is in the
+      // address bar either way, so this is not worth an error dialog.
+    }
+  }, []);
+
+  /**
+   * Rank an explicit roster.
+   *
+   * The roster is a parameter rather than something read from state, because
+   * reading it from a closure raced the effect that seeds a shared board: the
+   * two mount effects run in the same pass, so ranking started against the
+   * default people, set `loading` on the freshly-seeded ones, and then patched
+   * ids that no longer existed — leaving the board stuck on "Merging…" with
+   * nothing ever arriving.
+   */
+  const rank = useCallback(
+    async (roster?: Person[]) => {
+      const current = roster ?? peopleRef.current;
+      const targets = current.filter((p) => p.input.trim());
+      if (targets.length === 0) return;
+
+      const live = new Set(current.map((p) => p.id));
+      setPeople((ps) =>
+        ps.map((p) => (live.has(p.id) && p.input.trim() ? { ...p, loading: true, error: undefined } : p)),
+      );
+
+      // Everyone is looked up concurrently; one bad handle must not stall the
+      // rest of the board.
+      await Promise.all(
       targets.map(async (person) => {
         const query = toQuery(person.input);
         const patch = (next: Partial<Person>) =>
@@ -96,14 +178,18 @@ export default function Leaderboard() {
             loading: false,
             summary: body.summary,
             handles: live.map((p) => ({ platform: p.platform, handle: p.handle })),
-            slug: live.map((p) => `${TO_SHORT[p.platform]}-${p.handle}`).join('+'),
+            slug: encodeSlug(
+              Object.fromEntries(live.map((p) => [p.platform, p.handle])) as HandleMap,
+            ),
           });
         } catch (err) {
           patch({ loading: false, error: (err as Error).message });
         }
       }),
     );
-  }, [people, timezone]);
+    },
+    [timezone],
+  );
 
   const ranked = people
     .filter((p) => p.summary)
@@ -153,7 +239,9 @@ export default function Leaderboard() {
       </div>
 
       <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
-        <button className="btn" type="button" onClick={rank} disabled={busy}>
+        {/* Wrapped, not passed directly: `rank` takes an optional roster, and
+            handing it to onClick would pass the click event as that roster. */}
+        <button className="btn" type="button" onClick={() => rank()} disabled={busy}>
           {busy ? 'Merging…' : 'Rank them'}
         </button>
         <button
@@ -163,6 +251,14 @@ export default function Leaderboard() {
           onClick={() => setPeople((ps) => [...ps, blank()])}
         >
           Add person
+        </button>
+        <button
+          className="btn btn-ghost"
+          type="button"
+          onClick={copyLink}
+          disabled={!people.some((p) => p.input.trim())}
+        >
+          {copied ? 'Copied' : 'Copy link'}
         </button>
         <span className="mono faint" style={{ fontSize: 11 }}>
           last 120 days · {timezone}
