@@ -51,6 +51,23 @@ One file, one registry line. Nothing downstream changes.
 - **Be a polite guest.** Cache, back off, cap your pagination. Two of the
   current connectors are community services that can block us for everyone.
 
+## Changing the app
+
+`apps/web/public/app` is the Flutter app, built for web and **committed**.
+That is on purpose: a deploy host runs `next build` and has no Flutter SDK, so
+if the build were generated at deploy time `/app` would 404 for everyone who
+forks this repo.
+
+So if you change anything under `apps/mobile`, rebuild and commit the output:
+
+```bash
+./scripts/build-app.sh      # writes apps/web/public/app
+git add apps/web/public/app
+```
+
+The script drops the bundled CanvasKit, which Flutter loads from a CDN anyway —
+that is what keeps the committed build under 4 MB rather than 40.
+
 ## Style
 
 - Comments explain *why*, not *what*. The code already says what.

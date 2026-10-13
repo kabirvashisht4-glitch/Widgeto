@@ -148,14 +148,13 @@ echo "GITHUB_TOKEN=$(gh auth token)" > apps/web/.env.local   # or paste a PAT
 npm run dev          # http://localhost:3210
 ```
 
-To include the installable app (needs [Flutter][flutter]):
+The installable app is already built into the repo and served at `/app`, so a
+clone or a deploy has it without any Flutter toolchain. Rebuild it only if you
+change `apps/mobile`:
 
 ```bash
-./scripts/build-app.sh      # builds into apps/web/public/app, served at /app
+./scripts/build-app.sh      # needs Flutter; commit the result
 ```
-
-The script exits cleanly if Flutter isn't installed — the site and API build
-fine without it.
 
 ### Deploying
 

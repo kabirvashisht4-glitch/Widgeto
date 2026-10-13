@@ -13,5 +13,7 @@ apps/mobile/.flutter-plugins*
 apps/mobile/ios/Pods/
 apps/mobile/ios/Flutter/ephemeral/
 
-# The app's web build is generated into the site; never commit the output.
-apps/web/public/app/
+# The app's web build IS committed — a deploy host runs `next build` and has no
+# Flutter SDK, so generating it at deploy time would 404 /app for every fork.
+# CanvasKit is excluded by scripts/build-app.sh because Flutter loads it from a
+# CDN; that is what keeps the committed build under 4 MB instead of 40.
