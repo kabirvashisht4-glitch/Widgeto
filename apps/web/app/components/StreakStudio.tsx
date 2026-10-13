@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
@@ -5,27 +6,22 @@ import type { AttributedDay, PlatformId, PlatformResult, StreakSummary } from '@
 import WidgetCard from './WidgetCard';
 import { PLATFORM_COLORS } from './ContributionGrid';
 
-/**
- * The live console.
- *
- * The landing page *is* the onboarding flow: type the handles you already know,
- * get your real widget on screen before installing anything. Nothing to sign up
- * for, because every source here is public profile data keyed by username —
- * which is exactly why Widgeto can skip the OAuth wall its competitors need.
- */
-
 interface Payload {
   summary: StreakSummary;
   heatmap: AttributedDay[];
   platforms: PlatformResult[];
 }
 
-const FIELDS: { id: PlatformId; label: string; hint: string; support: 'official' | 'unofficial' }[] = [
+const FIELDS: {
+  id: PlatformId;
+  label: string;
+  hint: string;
+  support: 'official' | 'unofficial';
+}[] = [
   { id: 'github', label: 'GitHub', hint: 'torvalds', support: 'official' },
   { id: 'codeforces', label: 'Codeforces', hint: 'tourist', support: 'official' },
   { id: 'leetcode', label: 'LeetCode', hint: 'lee215', support: 'unofficial' },
   { id: 'atcoder', label: 'AtCoder', hint: 'tourist', support: 'unofficial' },
-  // A numeric id: Stack Exchange display names are neither unique nor stable.
   { id: 'stackoverflow', label: 'Stack Overflow', hint: '22656', support: 'official' },
 ];
 
@@ -44,27 +40,36 @@ export default function StreakStudio() {
   const [error, setError] = useState<string | null>(null);
   const [timezone, setTimezone] = useState('UTC');
 
-  // Resolved on the client so the streak is computed in the visitor's own day
-  // boundary rather than the server's.
   useEffect(() => {
     setTimezone(Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC');
   }, []);
 
   const run = useCallback(
     async (source: Record<string, string>) => {
-      const filled = Object.entries(source).filter(([, v]) => v.trim());
+      const filled = Object.entries(source).filter(([, value]) => value.trim());
+
       if (filled.length === 0) {
         setError('Add at least one handle.');
         return;
       }
+
       setLoading(true);
       setError(null);
+
       try {
         const params = new URLSearchParams({ tz: timezone });
-        for (const [k, v] of filled) params.set(k, v.trim());
+
+        for (const [key, value] of filled) {
+          params.set(key, value.trim());
+        }
+
         const res = await fetch(`/api/streak?${params}`);
         const body = await res.json();
-        if (!res.ok) throw new Error(body.error ?? `request failed (${res.status})`);
+
+        if (!res.ok) {
+          throw new Error(body.error ?? `request failed (${res.status})`);
+        }
+
         setData(body);
       } catch (err) {
         setError((err as Error).message);
@@ -75,13 +80,13 @@ export default function StreakStudio() {
     [timezone],
   );
 
-  const filledCount = Object.values(handles).filter((v) => v.trim()).length;
+  const filledCount = Object.values(handles).filter((value) => value.trim()).length;
 
   return (
     <div>
       <form
-        onSubmit={(e) => {
-          e.preventDefault();
+        onSubmit={(event) => {
+          event.preventDefault();
           run(handles);
         }}
         style={{ display: 'grid', gap: 12 }}
@@ -93,25 +98,36 @@ export default function StreakStudio() {
             gap: 12,
           }}
         >
-          {FIELDS.map((f) => (
+          {FIELDS.map((field) => (
             <label
-              key={f.id}
+              key={field.id}
               className="field"
-              style={{ ['--accent' as string]: PLATFORM_COLORS[f.id] }}
+              style={{ ['--accent' as string]: PLATFORM_COLORS[field.id] }}
             >
               <span
-                style={{ width: 10, height: 10, background: PLATFORM_COLORS[f.id], flexShrink: 0 }}
+                aria-hidden="true"
+                style={{
+                  width: 10,
+                  height: 10,
+                  background: PLATFORM_COLORS[field.id],
+                  flexShrink: 0,
+                }}
               />
               <input
-                value={handles[f.id] ?? ''}
-                onChange={(e) => setHandles((h) => ({ ...h, [f.id]: e.target.value }))}
-                placeholder={f.hint}
-                aria-label={`${f.label} handle`}
+                value={handles[field.id] ?? ''}
+                onChange={(event) =>
+                  setHandles((current) => ({
+                    ...current,
+                    [field.id]: event.target.value,
+                  }))
+                }
+                placeholder={field.hint}
+                aria-label={`${field.label} handle`}
                 spellCheck={false}
                 autoComplete="off"
               />
               <span className="eyebrow" style={{ fontSize: 9 }}>
-                {f.label}
+                {field.label}
               </span>
             </label>
           ))}
@@ -126,6 +142,7 @@ export default function StreakStudio() {
           >
             {loading ? 'Merging…' : 'Build my streak'}
           </button>
+
           <button
             className="btn btn-ghost"
             type="button"
@@ -137,14 +154,13 @@ export default function StreakStudio() {
           >
             Try a demo
           </button>
+
           <span className="mono faint" style={{ fontSize: 11 }}>
             no account · public profiles only · {timezone}
           </span>
         </div>
       </form>
 
-      {/* Politely announced: a sighted user sees the widget appear, but a
-          screen-reader user gets no signal at all without this. */}
       <p className="sr-only" role="status" aria-live="polite">
         {loading
           ? 'Merging your platforms…'
@@ -173,7 +189,11 @@ export default function StreakStudio() {
 
       <div style={{ marginTop: 22 }}>
         {data ? (
-          <WidgetCard summary={data.summary} heatmap={data.heatmap} platforms={data.platforms} />
+          <WidgetCard
+            summary={data.summary}
+            heatmap={data.heatmap}
+            platforms={data.platforms}
+          />
         ) : (
           <Placeholder loading={loading} />
         )}
@@ -182,45 +202,69 @@ export default function StreakStudio() {
   );
 }
 
-/** An empty grid so the page has the product's shape before any data arrives. */
 function Placeholder({ loading }: { loading: boolean }) {
   return (
     <div
-      className="card"
-      style={{
-        padding: 26,
-        minHeight: 260,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-      }}
+      className="card streak-placeholder"
+      aria-busy={loading}
+      aria-label={loading ? 'Loading your unified streak' : 'Your streak preview'}
     >
-      <div style={{ textAlign: 'center' }}>
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(26, 10px)',
-            gap: 3,
-            marginBottom: 18,
-            opacity: loading ? 0.55 : 0.22,
-            transition: 'opacity 300ms ease',
-          }}
-        >
-          {Array.from({ length: 26 * 5 }).map((_, i) => (
-            <div
-              key={i}
-              style={{
-                width: 10,
-                height: 10,
-                background: 'var(--grid-empty)',
-                animation: loading ? `pop 900ms ease ${(i % 26) * 24}ms infinite alternate` : undefined,
-              }}
-            />
+      <div className="streak-placeholder-header" aria-hidden="true">
+        <div>
+          <div className="eyebrow">unified streak</div>
+          <div className="streak-skeleton streak-skeleton-number" />
+          <div className="streak-skeleton streak-skeleton-status" />
+        </div>
+
+        <div className="streak-placeholder-metrics">
+          {[64, 76, 52].map((width, index) => (
+            <div key={index}>
+              <div
+                className="streak-skeleton"
+                style={{ width, height: 24 }}
+              />
+              <div
+                className="streak-skeleton"
+                style={{ width, height: 9, marginTop: 8 }}
+              />
+            </div>
           ))}
         </div>
-        <div className="mono faint" style={{ fontSize: 12 }}>
-          {loading ? 'talking to three APIs…' : 'your merged year shows up here'}
-        </div>
+      </div>
+
+      <div className="streak-placeholder-grid" aria-hidden="true">
+        {Array.from({ length: 130 }, (_, index) => (
+          <div
+            key={index}
+            className="streak-skeleton streak-skeleton-cell"
+            style={{ animationDelay: `${(index % 26) * 12}ms` }}
+          />
+        ))}
+      </div>
+
+      <hr className="rule" style={{ margin: '18px 0 16px' }} />
+
+      <div className="streak-placeholder-platforms" aria-hidden="true">
+        {FIELDS.map((field) => (
+          <div className="streak-placeholder-platform" key={field.id}>
+            <div
+              className="streak-skeleton"
+              style={{ width: 8, height: 8, flexShrink: 0 }}
+            />
+            <div
+              className="streak-skeleton"
+              style={{ width: 130, height: 12 }}
+            />
+            <div
+              className="streak-skeleton streak-platform-detail"
+              style={{ width: 160, height: 10 }}
+            />
+          </div>
+        ))}
+      </div>
+
+      <div className="mono faint streak-placeholder-footer">
+        {loading ? 'merging platform data…' : 'your merged year shows up here'}
       </div>
     </div>
   );
