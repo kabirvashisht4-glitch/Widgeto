@@ -158,10 +158,13 @@ change `apps/mobile`:
 
 ### Deploying
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fkabirvashisht4-glitch%2FWidgeto&env=GITHUB_TOKEN&envDescription=A%20classic%20GitHub%20token%20with%20NO%20scopes%20-%20public%20contribution%20calendars%20only&envLink=https%3A%2F%2Fgithub.com%2Fsettings%2Ftokens%2Fnew&project-name=widgeto&repository-name=widgeto)
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fkabirvashisht4-glitch%2FWidgeto&env=GITHUB_TOKEN&envDescription=A%20classic%20GitHub%20token%20with%20NO%20scopes%20-%20public%20contribution%20calendars%20only&envLink=https%3A%2F%2Fgithub.com%2Fsettings%2Ftokens%2Fnew&project-name=widgeto&repository-name=widgeto&root-directory=apps%2Fweb)
 
-Any Node host works. On Vercel, import the repo and set one environment
-variable:
+Any Node host works. On Vercel, the button above configures everything; if you
+import the repo by hand, set **Root Directory to `apps/web`** — this is a
+workspace monorepo, so Vercel installs from the repo root and builds in there.
+
+Then set one environment variable:
 
 | Variable | Required | What it's for |
 |---|---|---|
