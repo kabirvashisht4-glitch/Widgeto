@@ -93,3 +93,30 @@ decides when. The provider therefore asks for 60-minute refreshes normally and
 This is also why the streak must never read as broken just because the widget
 is stale: the engine treats an empty today as `at-risk`, not `broken`, so a
 missed refresh can never wrongly tell someone their run ended.
+
+## Building a release
+
+Release signing is optional for development. Without a release key,
+`flutter build apk --release` and `flutter run --release` sign with your local
+debug key, which is fine for testing but cannot be published or installed over
+a build signed with the real key.
+
+To sign with a real key:
+
+1. Create an upload keystore (keep it, and its passwords, out of the repo):
+
+   ```sh
+   keytool -genkey -v -keystore ~/upload-keystore.jks -keyalg RSA \
+     -keysize 2048 -validity 10000 -alias upload
+   ```
+
+2. Copy `android/key.properties.example` to `android/key.properties` and fill
+   in `storeFile`, `storePassword`, `keyAlias` and `keyPassword`. The file is
+   git-ignored, as are `*.jks` and `*.keystore`.
+
+3. Build: `flutter build apk --release` or `flutter build appbundle`.
+
+In CI, instead of a file, set `ANDROID_KEYSTORE_PATH`,
+`ANDROID_KEYSTORE_PASSWORD`, `ANDROID_KEY_ALIAS` and `ANDROID_KEY_PASSWORD`.
+Values in `key.properties` take precedence. If any of the four is missing, the
+build falls back to the debug key.
