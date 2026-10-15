@@ -291,3 +291,116 @@ hr.rule {
   white-space: nowrap;
   border: 0;
 }
+
+/* Streak loading skeleton — issue #6 */
+.streak-placeholder {
+  min-width: 0;
+}
+
+.streak-placeholder-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+.streak-skeleton {
+  display: block;
+  flex-shrink: 0;
+  background: currentColor;
+  opacity: 0.1;
+  animation: streak-skeleton-pulse 1.4s ease-in-out infinite;
+}
+
+.streak-skeleton-number {
+  width: 84px;
+  height: 48px;
+  margin-top: 8px;
+}
+
+.streak-skeleton-status {
+  width: 116px;
+  height: 10px;
+  margin-top: 10px;
+}
+
+.streak-placeholder-metrics {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 20px;
+}
+
+.streak-placeholder-grid {
+  display: grid;
+  grid-template-columns: repeat(26, minmax(0, 1fr));
+  gap: 4px;
+  margin-top: 24px;
+}
+
+.streak-skeleton-cell {
+  width: 100%;
+  aspect-ratio: 1;
+  min-width: 0;
+}
+
+.streak-placeholder-platforms {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.streak-placeholder-platform {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.streak-platform-detail {
+  margin-left: auto;
+}
+
+.streak-placeholder-footer {
+  margin-top: 18px;
+}
+
+@keyframes streak-skeleton-pulse {
+  0%, 100% {
+    opacity: 0.06;
+  }
+  50% {
+    opacity: 0.16;
+  }
+}
+
+@media (max-width: 560px) {
+  .streak-placeholder-header {
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .streak-placeholder-metrics {
+    justify-content: flex-start;
+    gap: 16px;
+  }
+
+  .streak-placeholder-grid {
+    grid-template-columns: repeat(13, minmax(0, 1fr));
+    gap: 3px;
+  }
+
+  .streak-placeholder-platform {
+    gap: 8px;
+  }
+
+  .streak-platform-detail {
+    max-width: 30%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .streak-placeholder .streak-skeleton {
+    animation: none !important;
+  }
+}
